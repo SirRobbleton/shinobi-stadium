@@ -1,0 +1,64 @@
+Name,HP,Ability,Attack,Attack Damage,Support Damage,ImagePath
+Naruto Uzumaki,90,Shadow Clone,Rasengan,40,20,res://assets/characters/naruto_uzumaki.png
+Sasuke Uchiha,90,Sharingan,Chidori,40,20,res://assets/characters/sasuke_uchiha.png
+Sakura Haruno,100,Medical Ninjutsu,Booby Trap,20,10,res://assets/characters/sakura_haruno.png
+Kakashi Hatake,110,Sharingan,Lightning Blade,50,30,res://assets/characters/kakashi_hatake.png
+Itachi Uchiha,100,Finger Genjutsu,Great Fireball Technique,40,30,res://assets/characters/itachi_uchiha.png
+Jiraiya,110,Spiked Hair,Giant Rasengan,40,30,res://assets/characters/jiraiya.png
+Tsunade,110,Creation Rebirth,Power Punch,60,50,res://assets/characters/tsunade.png
+Orochimaru,110,Serpent Regeneration,Kusanagi,40,30,res://assets/characters/orochimaru.png
+Danzo,110,Izanagi,Wind Release: Razor Shuriken,40,20,res://assets/characters/danzo.png
+Zabuza,100,Hidden Mist,Silent Homicide,30,30,res://assets/characters/zabuza.png
+Haku,100,One-handed Seals,Thousand Needles of Death,20,20,res://assets/characters/haku.png
+Kurenai Yuhi,100,Demonic Illusion,Tree Binding Death,30,20,res://assets/characters/kurenai_yuhi.png
+Asuma Sarutobi,110,Chakra Blades,Blade Barrage,20,20,res://assets/characters/asuma_sarutobi.png
+Shikamaru Nara,90,Strategic Planning,Shadow Possession,30,20,res://assets/characters/shikamaru_nara.png
+Rock Lee,90,5th Gate,Primary Lotus,30,30,res://assets/characters/rock_lee.png
+Neji Hyuga,90,Byakugan,8 Trigrams: Palms Rotation,30,20,res://assets/characters/neji_hyuga.png
+Hinata Hyuga,90,Byakugan,Gentle Fist,30,20,res://assets/characters/hinata_hyuga.png
+Gaara,90,Sand Armor,Sand Burial,40,30,res://assets/characters/gaara.png
+Maito Gai,120,7th Gate,Dynamic Entry,40,30,res://assets/characters/maito_gai.png
+Yamato,100,Wood Style: Chakra Suppression,Wood Style: Wood Prison,30,30,res://assets/characters/yamato.png
+Sai,100,Super Beast Scroll,Ink Beast,20,20,res://assets/characters/sai.png
+Naruto Uzumaki (S),100,Sage Mode,Rasenshuriken,50,40,res://assets/characters/naruto_uzumaki_(s).png
+Sasuke Uchiha (S),100,Mangekyo Sharingan,Kirin,50,40,res://assets/characters/sasuke_uchiha_(s).png
+Sakura Haruno (S),100,Medical Ninjutsu,Enhanced Punch,40,30,res://assets/characters/sakura_haruno_(s).png
+Kakashi Hatake (S),110,Kamui,Lightning Tag Team,50,30,res://assets/characters/kakashi_hatake_(s).png
+Itachi Uchiha (S),100,Izanami,Amaterasu,30,30,res://assets/characters/itachi_uchiha_(s).png
+Hinata Hyuga (S),100,Byaukugan,Vacuum Palm,20,10,res://assets/characters/hinata_hyuga_(s).png
+Neji Hyuga (S),100,Byuakugan,8 Triagrams: 64 Palms,40,30,res://assets/characters/neji_hyuga_(s).png
+Rock Lee (S),100,Hidden Leaf Counter,Leaf Hurricane,50,40,res://assets/characters/rock_lee_(s).png
+Tenten (S),100,Banshosen,Weapon Control: Heavenly Chain Disaster,20,10,res://assets/characters/tenten_(s).png
+Shikamaru (S),100,Shadow Constriction,Shadow Trap,30,20,res://assets/characters/shikamaru_(s).png
+Choji Akimichi (S),100,Body Expansion,Heavy Impact,40,20,res://assets/characters/choji_akimichi_(s).png
+Ino Yamanaka (S),100,Sensory Link,Mind Destruction,0,0,res://assets/characters/ino_yamanaka_(s).png
+Kiba (S),100,Beast Human Clone,Wolf Fang Over Fang,30,20,res://assets/characters/kiba_(s).png
+Shino (S),100,Insect Jar,Parasitic Insects,30,20,res://assets/characters/shino_(s).png
+Gaara (S),100,Motherly Love,Quicksand Watferfall,20,10,res://assets/characters/gaara_(s).png
+Temari (S),100,Summoning: Kamatari,Wind Cutter,40,30,res://assets/characters/temari_(s).png
+Kankuro (S),100,Sanshouou - The Salamander,Karasu & Koroari - Black Ant & Crow,20,20,res://assets/characters/kankuro_(s).png
+Pain/Nagato,120,Rinnegan,"Shinra Tensei
+/
+Bansho Tenin",30,20,res://assets/characters/pain/nagato.png
+Konan,100,Origami Escape,Paper Storm,30,30,res://assets/characters/konan.png
+Kisame,120,Samehada,Shark Dance,40,20,res://assets/characters/kisame.png
+Deidara,100,C1: Clay Trap,C2: Clay Dragon,30,20,res://assets/characters/deidara.png
+Sasori,100,Iron Sand,Puppet: 3rd Kazegage,30,30,res://assets/characters/sasori.png
+Hidan,100,Immortality,Reaper’s Curse,20,20,res://assets/characters/hidan.png
+Kakuzu,100,Multiple Hearts,Thread Manipulation,30,30,res://assets/characters/kakuzu.png
+Tobi,100,Dimensional Escape,Earth Style: Mole Technique,20,20,res://assets/characters/tobi.png
+Zetsu,100,Substitution Technique,Kagero,20,20,res://assets/characters/zetsu.png
+Kabuto Yakushi,100,Medical Ninjutsu,Chakra Scalpel,30,20,res://assets/characters/kabuto_yakushi.png
+Choji Akimichi,90,3 Colored Pills,Bullet Tank,30,20,res://assets/characters/choji_akimichi.png
+Ino Yamanaka,90,Mind Reading Technique,Mind Transfer Jutsu,30,30,res://assets/characters/ino_yamanaka.png
+Tenten,90,Weapon Mastery,Rapid Fire,10,10,res://assets/characters/tenten.png
+Temari,90,Wind Slash,Wind Dance,30,20,res://assets/characters/temari.png
+Kankuro,90,Puppet Mastery,Black Secret Technique: Black Ant,20,20,res://assets/characters/kankuro.png
+Kiba,90,Akamaru,Gatsuga,20,20,res://assets/characters/kiba.png
+Shino,90,Insect Intel Gathering,Parasitic Insects,30,20,res://assets/characters/shino.png
+Hashirama Senju,130,Sage Mode,Wood Style: Deep Forest Emergence,20,20,res://assets/characters/hashirama_senju.png
+Tobirama Senju,120,Shadow Clone,Water Dragon Bullet,40,40,res://assets/characters/tobirama_senju.png
+Hiruzen Sarutobi,110,Elemental Harmony,Five Elements,50,40,res://assets/characters/hiruzen_sarutobi.png
+Minato Namikaze,120,Hiraishin Marking,Flying Raijin,40,40,res://assets/characters/minato_namikaze.png
+Madara Uchiha,130,Eternal Mangekyu Sharingan,Great Fire Annihiliation,40,30,res://assets/characters/madara_uchiha.png
+Obito Uchiha,120,Kamui,Wood Style,20,20,res://assets/characters/obito_uchiha.png

@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://dga777v5uegtj"]
+
+[ext_resource type="PackedScene" uid="uid://csek6obqfghwx" path="res://scenes/selection/selection_scene.tscn" id="1_vslsb"]
+
+[node name="SelectionPreviewWrapper" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SelectionScene" parent="." instance=ExtResource("1_vslsb")]
+layout_mode = 1

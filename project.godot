@@ -1,0 +1,47 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Shinobi_Stadium"
+run/main_scene="uid://c7m4ahuoxqceh"
+config/features=PackedStringArray("4.4", "Mobile")
+config/icon="res://assets/icon.svg"
+
+[audio]
+
+buses/default_bus_layout="uid://coj6eo6foeykk"
+
+[autoload]
+
+CharacterSelection="*res://scripts/gamestate/character_selection.gd"
+MusicManager="*res://scripts/audio/music_manager.gd"
+SceneManager="*res://scripts/gamestate/scene_manager.gd"
+CharacterDatabase="*res://scripts/data/character_database.gd"
+SfxManager="*res://scripts/audio/sfx_manager.gd"
+GamestateManager="*res://scripts/gamestate/gamestate_manager.gd"
+ZoomManager="*res://scripts/ui/zoom_manager.gd"
+ChakraManager="*res://scripts/gamestate/chakra_manager.gd"
+BattleStateManager="*res://scripts/gamestate/battle_state_manager.gd"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/size/initial_position_type=0
+window/size/always_on_top=true
+window/stretch/mode="viewport"
+window/stretch/aspect="keep_height"
+window/handheld/orientation=1
+
+[rendering]
+
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true

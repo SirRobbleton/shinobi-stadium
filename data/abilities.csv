@@ -1,0 +1,220 @@
+Ability,Class,Type,Random,Ninjutsu,Taijutsu,Genjutsu,Bloodline,Damage,Support Damage,Target,Duration
+Rasengan,Attack,Ninjutsu,1,1,,,,40,20,Active,1
+Shadow Clone,Special,Ninjutsu,1,,,,,,,Self,1
+Kyubi Rasengan,Transformation Attack,Ninjutsu,,1,,,1,50,30,Active,1
+Rasengan,Attack,Ninjutsu,1,1,,,,40,20,Active,1
+Shadow Clone,Special,Ninjutsu,1,,,,,,,Self,1
+Kyubi Rasengan,Transformation Attack,Ninjutsu,,1,,,1,50,30,Active,1
+Chakra Surge,Transformation Effect,Ninjutsu,,,,,,,,Active,Direct
+Chidori,Attack,Ninjutsu,1,1,,,,40,20,Active,1
+Sharingan,Special,Genjutsu,1,,,,,,,Active,1
+Corrupted Chidori,Transformation Attack,Ninjutsu,,2,,,,50,30,Active,1
+Curse Rush,Transformation Effect,Ninjutsu,,,,,,,,Self,Direct
+Medical Ninjutsu,Special,Ninjutsu,,1,,,,,,"Friendly, Any",Direct
+Booby Trap,Attack,Ninjutsu,,,1,,,20,10,Active,1
+Power Slam,Ultimate Attack,Taijutsu,1,,1,,,40,,Active,Direct
+Lightning Blade,Attack,Ninjutsu,,2 / 3 / 4,,,,50 / 70 / 90,30 / 50 / 70,Active,Direct
+Sharingan,Special,Genjutsu,,,,,,,,Active,Direct
+Kamui,Ultimate Attack,Genjutsu,1 / 2,,,,,,,Any,"1,2"
+Finger Genjutsu,Special,Genjutsu,,0 / 1,0 / 1,0 / 1,,,,Self,1
+Great Fireball Technique,Attack,Ninjutsu,1,,,,1,40,30,Active,Direct
+Tsukuyomi,Ultimate Attack,Genjutsu,,,,2,1,70,,Active,1
+Spiked Hair,Special,Ninjutsu,1,,,,,,,Self,1
+Giant Rasengan,Attack,Ninjutsu,0 / 1,1,1,,,40 / 60,30 / 40,Active,Direct
+Goemon,Transformation Attack,Ninjutsu,,1,1,1,,30,30,All,Direct
+Summoning: Fukasaku & Shima,Transformation Effect,Ninjutsu,,,,,,,,Self,Direct
+Power Punch,Attack,Taijutsu,1,,2,,,60,50,Active,Direct
+Creation Rebirth,Special,Ninjutsu,1,2,,,,,,Self,Direct
+Heaven Kick of Pain,Transformation Attack,Taijutsu,1,1,2,,,60,50,Active,Direct
+Summoning: Katsuyu,Transformation Effect,Ninjutsu,,,,,,,,"Self, Friendly",Direct
+Kusanagi,Attack,Taijutsu,,,1,,1,40,30,Active,Direct
+Serpent Regeneration,Special,Ninjutsu,1,1,,,,,,Self,Reaction
+Edo Tensei,Transformation Attack,Ninjutsu,4,,,,,,,Friendly,Direct
+Summoning: Manda,Transformation Effect,Ninjutsu,,,,,,,,Self,Direct
+Wind Release: Razor Shuriken,Attack,Ninjutsu,1,1,,,,40,20,Any,Direct
+Izanagi,Special,Genjutsu,,,,1,1,,,Self,Reaction
+Wind Release: Blades,Transformation Attack,Ninjutsu,1,1,,,,20,20,Any,Direct
+Summoning: Baku,Transformation Effect,Ninjutsu,,,,,,,,Any,Direct
+Silent Homicide,Attack,Taijutsu,1,,1,,,30,30,Active,Direct
+Hidden Mist,Special,Ninjutsu,,,,1,,,,Self,1
+Executioner's Blade,Ultimate Attack,Taijutsu,1,,1,,,40,,Active,Direct
+Thousand Needles of Death,Attack,Ninjutsu,,1,,,1,20,20,"Benched, Active",Direct
+One-handed Seals,Special,Ninjutsu,,,,,,,,Self,1
+Ice Release: Demonic Mirrors,Ultimate Attack,Ninjutsu,,1,,,1,20,,All,Direct
+Demonic Illusion,Special,Genjutsu,,,,1,,,,Active,1
+Tree Binding Death,Attack,Genjutsu,1,,,1,,30,20,Active,1
+Flower Petal Escape,Ultimate Attack,Genjutsu,2,,,1,,,,Self,Direct
+Chakra Blades,Special,Taijutsu,,1,,,,,,Self,1
+Blade Barrage,Attack,Taijutsu,,1,1,,,20,20,Active,Direct
+Fire Release,Ultimate Attack,Ninjutsu,2,0 / 1,,,,10 / 50,,Active,1
+Shadow Possession,Attack,Ninjutsu,1,,,1,,30,20,Active,1
+Strategic Planning,Special,Ninjutsu,,,,,,,,Self,Passive
+Shadow Neck Bind,Ultimate Attack,Ninjutsu,1,,,1,,40,,Active,1
+Primary Lotus,Attack,Taijutsu,1,,1,,,30,30,Active,Direct
+5th Gate,Special,Taijutsu,X,,,,,,,Self,Direct
+Suiken,Transformation Attack,Taijutsu,2,,,,,30,30,Active,Direct
+Sake Counter,Transformation Effect,Taijutsu,,,,,,,,Self,1
+Byakugan,Special,Genjutsu,,,,,1,,,Self,1
+8 Trigrams: Palms Rotation,Attack,Taijutsu,1,,1,,,30,20,Active,1
+8 Triagrams: 64 Palms,Ultimate Attack,Taijutsu,1,,1,,1,40,,Active,Direct
+Gentle Fist,Attack,Taijutsu,,,1,,1,30,20,Active,1
+Byakugan,Special,Ninjutsu,1,,,,,,,Self,Direct
+Twin Lion Fist,Ultimate Attack,Taijutsu,1,,1,,1,40,,Active,1
+Sand Burial,Attack,Ninjutsu,,1,,,1,40,30,Active,1
+Sand Armor,Special,Ninjutsu,1,,,,,,,Self,1
+Desert Funeral,Transformation Attack,Ninjutsu,1,1,,,1,50,,Active,1
+Shield of Shukaku,Transformation Effect,Ninjutsu,,,,,,,,Active,1
+Dynamic Entry,Attack,Taijutsu,1,,1,,,40,30,Active,Direct
+7th Gate,Special,Taijutsu,2,,,,,,,Self,1
+Morning Tiger,Transformation Attack,Taijutsu,1,,2,,,80,-,Active,Direct
+8th Gate,Transformation Effect,Taijutsu,,,,,,,,Self,1
+Wood Style: Wood Prison,Attack,Ninjutsu,,1,,,1,30,30,Active,1
+Wood Style: Chakra Suppression,Special,Ninjutsu,,,,,1,,,Active,1
+"Wood Style:
+Deep Forest Emergence",Ultimate Attack,Ninjutsu,1,1,,,1,10,,All,Direct
+Super Beast Scroll,Special,Ninjutsu,1,,,,,,,Self,Direct
+Ink Beast,Attack,Ninjutsu,0 / 1 / 2,1,,,,20 / 30 / 40,20 / 30 / 40,"Self, Active",Direct
+Ink Bird,Ultimate Attack,Ninjutsu,,,,1,,,,"Self, Friendly",1
+Rasenshuriken,Attack,Ninjutsu,1,1,1,,,50,40,Active,Direct
+Sage Mode,Special,Ninjutsu,1,,,,,,,Self,Direct
+Six Path Rasenshuriken,Transformation Attack,Ninjutsu,1,1,1,,,30,20,Any,Direct
+Tailed Beast Chakra,Transformation Effect,Ninjutsu,,,,,,,,Self,Direct
+Kirin,Attack,Ninjutsu,1,2,,,,50,40,Active,Direct
+Mangekyo Sharingan,Special,Genjutsu,,,,,1,,,Self,Direct
+Amaterasu Arrow,Transformation Attack,Ninjutsu,0 / 1,1,,1,1,60,50,Active,Direct
+Susano'o Armor,Transformation Effect,Genjutsu,,,,,,,,Self,Direct
+Enhanced Punch,Attack,Taijutsu,,1,1,,,40,30,Active,Direct
+Medical Ninjutsu,Special,Ninjutsu,,1,,,,,,Self,Direct
+Regeneration Punch,Transformation Attack,Taijutsu,0 / 1,1,1,,,40,30,Active,Direct
+Enhanced Strength,Transformation Effect,Taijutsu,,,,,,,,Self,Direct
+Lightning Tag Team,Attack,Ninjutsu,,1,1,,,50,30,Active,Direct
+Kamui,Special,Ninjutsu,1,,,,1,,,Self,Reaction
+Mangekyō Kamui Shuriken,Ultimate Attack,Ninjutsu,2,1,,,1,70,,Active,Direct
+Amaterasu,Attack,Ninjutsu,1,1,,,1,30,30,All,Direct
+Izanami,Special,Genjutsu,,,,1,1,,,Active,1
+Totsuga Blade,Transformation Attack,Taijutsu,,,1,1,1,40,40,Active,Direct
+Susano'o Armor,Transformation Effect,Genjutsu,,,,,,,,Self,Direct
+Vacuum Palm,Attack,Taijutsu,1,,1,,,20,10,Active,Direct
+Byaukugan,Special,Genjutsu,,,,,,,,Any,Direct
+"Twin Lion Assault
+",Ultimate Attack,Taijutsu,1,1,1,,,50,,Active,Direct
+8 Triagrams: 64 Palms,Attack,Taijutsu,,,1,,1,40,30,Active,1
+Byuakugan,Special,Taijutsu,,,,,,,,Opponent,Direct
+8 Trigrams: 128 Palms,Ultimate Attack,Taijutsu,1,,1,,1,50,,Active,Direct
+Leaf Hurricane,Attack,Taijutsu,,,2,,,50,40,Active,1
+Hidden Leaf Counter,Special,Taijutsu,1,,,,,,,Self,Reaction
+Hidden Lotus,Transformation Attack,Taijutsu,2,,1,,,60,40,Active,Direct
+Gate Opening,Transformation Effect,Taijutsu,,,,,,,,Self,1
+Weapon Control: Heavenly Chain Disaster,Attack,Ninjutsu,2,,1,,,20,10,All,Direct
+Banshosen,Special,Ninjutsu,1,,,,,,,Opponent,1
+Segmented Iron Dome,Ultimate Attack,Ninjutsu,3,,,,,,,All,Direct
+Shadow Trap,Attack,Ninjutsu,2,,,,,30,20,Active,1
+Shadow Constriction,Special,Ninjutsu,,,,1,,,,Active,1
+Shadow Control,Ultimate Attack,Ninjutsu,1,,,1,,40,,Any,Direct
+Heavy Impact,Attack,Taijutsu,1,,1,,,40,20,Active,Direct
+Body Expansion,Special,Taijutsu,,,,,1,,,Self,1
+Giant Sweep,Transformation Attack,Taijutsu,1,,1,,1,20,20,All,Direct
+Giant Skin,Transformation Effect,Taijutsu,,,,,1,,,Self,Direct
+Mind Destruction,Attack,Genjutsu,,,,1,,?,?,Active,1
+Sensory Link,Special,Genjutsu,,,,1,,,,All friendly,1
+Mind Co-op,Ultimate Attack,Genjutsu,,,,,,,,Self,1
+Wolf Fang Over Fang,Attack,Taijutsu,1,,1,,,30,20,Active,Direct
+Beast Human Clone,Special,Taijutsu,2,,,,,,,Self,1
+Three-Headed Wolf,Ultimate Attack,Taijutsu,1,,1,,1,20,,Any,Direct
+Parasitic Insects,Attack,Ninjutsu,1,,,,1,30,20,Any,1
+Insect Jar,Special,Ninjutsu,,,,,1,,,All friendly,1
+Insect Sphere,Ultimate Attack,Ninjutsu,1,,,,1,40,,Active,1
+Quicksand Watferfall,Attack,Ninjutsu,1,1,,,1,20,10,All,1
+Motherly Love,Special,Ninjutsu,2,,,,,,,Self,1
+Imperial Funeral,Ultimate Attack,Ninjutsu,1,1,,1,,50,,Active,1
+Wind Cutter,Attack,Ninjutsu,,1,1,,,40,30,Active,Direct
+Summoning: Kamatari,Special,Ninjutsu,1,,,,,,,Self,1
+Quick Beheading Dance,Ultimate Attack,Ninjutsu,,1,1,,,40,,Active,Direct
+Karasu & Koroari - Black Ant & Crow,Attack,Ninjutsu,1 / 2,,,,,20 / 30,20 / 30,Active,1
+Sanshouou - The Salamander,Special,Ninjutsu,2,,,,,,,All friendly,1
+Puppet House,Ultimate Attack,Ninjutsu,1,1,,,,20,,Self,1
+"Shinra Tensei
+/
+Bansho Tenin",Attack,Ninjutsu,1,,,,1,30,20,Any,Direct
+Rinnegan,Special,Genjutsu,,,,,1,,,All,Direct
+Shibaku Tensei,Ultimate Attack,Ninjutsu,2,1,,,1,40,,All,Direct
+Paper Storm,Attack,Ninjutsu,,1,,1,,30,30,Active,Direct
+Origami Escape,Special,Ninjutsu,,,,1,,,,Friendly,Direct
+Paper Angel,Ultimate Attack,Ninjutsu,2,1,,,,20,,All,1
+Shark Dance,Attack,Ninjutsu,1,1,,,,40,20,Active,Direct
+Samehada,Special,Ninjutsu,,,1,,,,,Active,Direct
+Great Shark Bullet Technique,Transformation Attack,Ninjutsu,1,2,,,,60,40,Active,Direct
+Shark Skin,Transformation Effect,Ninjutsu,,,,,,,,Opponent,1
+C2: Clay Dragon,Attack,Ninjutsu,1,1,,,,30,20,Any,Direct
+C1: Clay Trap,Special,Ninjutsu,1,,,,,,,Self,1
+C0: Ultimate Art,Ultimate Attack,Ninjutsu,1,1,1,,,40,,All,Direct
+Puppet: 3rd Kazegage,Attack,Ninjutsu,2,,,,,30,30,Active,Direct
+Iron Sand,Special,Ninjutsu,,,,,1,,,Self,Direct
+100 Puppets,Ultimate Attack,Ninjutsu,1,1,1,,,20,,Any,Direct
+Immortality,Special,Ninjutsu,,,,,,0,0,Self,Passive
+Reaper’s Curse,Attack,Genjutsu,1,,,,1,20,20,Active,1
+Jashin's Ritual,Ultimate Attack,Ninjutsu,,,,,1 / 2,,,Self,Direct
+Multiple Hearts,Special,Ninjutsu,,0 / 1 *,0 / 1 *,0 / 1 *,0 / 1 *,,,Self,Direct
+Thread Manipulation,Attack,Ninjutsu,2,,,,,30,30,Active,Direct
+Elemental Manipulation,Ultimate Attack,Ninjutsu,,1,1,1,,60,,Active,Direct
+Dimensional Escape,Special,Ninjutsu,,,,,1,,,Self,1
+Earth Style: Mole Technique,Attack,Ninjutsu,1,,,,1,20,20,Active,1
+Kamui,Ultimate Attack,Ninjutsu,,,,1,1,30,,Active,1
+Kagero,Attack,Taijutsu,1, ,,,,20,20,Active,Direct
+Substitution Technique,Special,Ninjutsu,1,,,,,,,"Friendly, Active",Reaction
+Spore Possession,Ultimate Attack,Ninjutsu,X,,,,,,,Active,Direct
+Chakra Scalpel,Attack,Taijutsu,1,,1,,,30,20,Active,1
+Medical Ninjutsu,Special,Ninjutsu,,1,,,,,,Self,Direct
+Temple of Nirvana,Ultimate Attack,Genjutsu,1,,,1,,,,All,Direct
+3 Colored Pills,Special,Taijutsu,,,"1*
+
+Damage increase: +20","1**
+
+Damage reduction: -20","1***
+
+Draw chakra:
+2 chakra.",,,Self,1
+Bullet Tank,Attack,Taijutsu,2,,,,,30,20,Active,1
+Butterfly Mode,Ultimate Attack,Taijutsu,,1,1,,,50,,Active,1
+Mind Reading Technique,Special,Genjutsu,,,,1,,,,Opponent,Direct
+Mind Transfer Jutsu,Attack,Genjutsu,1,,,1,,30,30,Active,1
+Sensory Prowess,Ultimate Attack,Genjutsu,,,,,,,,Self,Direct
+Weapon Mastery,Special,Taijutsu,1,,,,,,,Self,1
+Rapid Fire,Attack,Taijutsu,1,,1,,,10,10,Active,Direct
+Twin Dragons,Ultimate Attack,Taijutsu,1,,1,,,10,,All,Direct
+Wind Slash,Special,Ninjutsu,,1,,,,,,Any,Direct
+Wind Dance,Attack,Ninjutsu,1,1,1,,,30,20,All,Direct
+Dust Cloud,Ultimate Attack,Ninjutsu,1,,,,,,,"Friendly, All",1
+Puppet Mastery,Special,Ninjutsu,1,,,,,,,Self,1
+Black Secret Technique: Black Ant,Attack,Ninjutsu,2,,,,,20,20,Active,1
+Black Secret Technique: Crow,Ultimate Attack,Ninjutsu,3,,,,,40,,Active,1
+Gatsuga,Attack,Taijutsu,,,1,,,20,20,Active,Direct
+Akamaru,Special,Taijutsu,1,,,,,,10,Active,Direct
+Wolf Fang Over Fang,Ultimate Attack,Taijutsu,1,,1,,,20,,Any,Direct
+Parasitic Insects,Attack,Taijutsu,,,,,1,30,20,Active,Direct
+Insect Intel Gathering,Special,Taijutsu,,,,,,,,Opponent,Direct
+Insect Sphere,Ultimate Attack,Taijutsu,,,,,2,20,,"Self, Friendly",Direct
+Wood Style: Deep Forest Emergence,Attack,Ninjutsu,1,,,,1,20,20,Active,Direct
+Sage Mode,Special,Ninjutsu,,,,,,,,Self,Direct
+"Wood Style:
+True Thousand Hands",Ultimate Attack,Ninjutsu,1,1,1,,1,80,,Active,Direct
+Water Dragon Bullet,Attack,Ninjutsu,1,1,,,,40,40,Active,Direct
+Shadow Clone,Special,Ninjutsu,1,,,,,,,Self,1
+Hiraishin Seal,Special,Ninjutsu,1,,,,,,,Active,Permanent
+Flying Raijin Slash,Ultimate Attack,Taijutsu,,1,1,,,60,,Any,Direct
+Five Elements,Attack,Ninjutsu,,1,1,1,,50,40,Active,1
+Elemental Harmony,Special,Genjutsu,,,,,,,,Self,1
+Reaper Death Seal,Ultimate Attack,Ninjutsu,1,,,,,?,,Active,Direct
+Flying Raijin,Attack,Ninjutsu,,1,1,,,40,40,Any,Direct
+Hiraishin Marking,Special,Ninjutsu,1,,,,,,,Active,Permanent
+"Flying Raijin (Level 2)
+",Ultimate Attack,Ninjutsu,?,,,,,30,,Any,Direct
+Great Fire Annihiliation,Attack,Ninjutsu,1,1,,,0 / 1,40,30,Active,Direct
+Eternal Mangekyu Sharingan,Special,Genjutsu,,,,,,,,Self,Direct
+Planet-Splitting Slash,Transformation Attack,Taijutsu,,1,1,,1,30,30,All,Direct
+Susano'o Armor,Transformation Effect,Ninjutsu,,,,,,,,Self,Direct
+Wood Style,Attack,Ninjutsu,,,,,1,20,20,Active,Direct
+Fire Style,Attack,Ninjutsu,,2,,,,40,30,Active,Direct
+Kamui,Special,Ninjutsu,,,,1,,,,Self,1
+"Summoning:
+Gedo Mazu Statue",Ultimate Attack,Ninjutsu,,1,,1,1,30,,All,1

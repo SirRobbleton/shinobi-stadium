@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6x8j6u4y5v1e"]
+
+[ext_resource type="Script" uid="uid://d0bxbch4jkp08" path="res://scripts/ui/zoom_overlay.gd" id="1_zoom_overlay"]
+
+[node name="ZoomOverlay" type="Control" groups=["zoom_overlay"]]
+z_index = 10
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_zoom_overlay")
+
+[node name="ColorRect" type="ColorRect" parent="." groups=["zoom_overlay"]]
+z_index = 10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.478431, 0.478431, 0.478431, 0.588235)
+
+[node name="ZoomCardContainer" type="CenterContainer" parent="." groups=["zoom_overlay"]]
+z_index = 10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

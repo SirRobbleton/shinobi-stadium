@@ -1,0 +1,407 @@
+[gd_scene load_steps=6 format=3 uid="uid://ca68fibobexyt"]
+
+[ext_resource type="PackedScene" uid="uid://cc2ldxi27dh33" path="res://scenes/card_slot.tscn" id="1_3hov6"]
+[ext_resource type="Script" uid="uid://e2kmroxcrkib" path="res://scenes/battle/battle_scene.gd" id="1_6iigb"]
+[ext_resource type="PackedScene" uid="uid://bovi23yf8c4uk" path="res://scenes/objects/character_card.tscn" id="2_pu738"]
+[ext_resource type="Script" uid="uid://dj4201gpadn74" path="res://scripts/ui/battle_overlay.gd" id="4_ugm31"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ugm31"]
+size = Vector2(357, 391)
+
+[node name="BattleScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_6iigb")
+character_card_scene = ExtResource("2_pu738")
+
+[node name="BattleLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OppHandContainer" type="MarginContainer" parent="BattleLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HandCards" type="HBoxContainer" parent="BattleLayout/OppHandContainer"]
+layout_mode = 2
+
+[node name="OppBattleArea" type="MarginContainer" parent="BattleLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.5
+
+[node name="ShinobiContainer" type="HBoxContainer" parent="BattleLayout/OppBattleArea"]
+layout_mode = 2
+
+[node name="SupportPosition1" type="CenterContainer" parent="BattleLayout/OppBattleArea/ShinobiContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition1"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardSlot" parent="BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition1/Control" instance=ExtResource("1_3hov6")]
+position = Vector2(0, -50)
+
+[node name="ActivePosition" type="CenterContainer" parent="BattleLayout/OppBattleArea/ShinobiContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardSlot" parent="BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition/Control" instance=ExtResource("1_3hov6")]
+position = Vector2(0, 51)
+
+[node name="SupportPosition2" type="CenterContainer" parent="BattleLayout/OppBattleArea/ShinobiContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition2"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardSlot" parent="BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition2/Control" instance=ExtResource("1_3hov6")]
+position = Vector2(0, -50)
+
+[node name="PlayerBattleArea" type="MarginContainer" parent="BattleLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.5
+mouse_filter = 2
+
+[node name="ShinobiContainer" type="HBoxContainer" parent="BattleLayout/PlayerBattleArea"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SupportPosition1" type="CenterContainer" parent="BattleLayout/PlayerBattleArea/ShinobiContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Control" type="Control" parent="BattleLayout/PlayerBattleArea/ShinobiContainer/SupportPosition1"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardSlot" parent="BattleLayout/PlayerBattleArea/ShinobiContainer/SupportPosition1/Control" groups=["support_slot"] instance=ExtResource("1_3hov6")]
+position = Vector2(0, 50)
+
+[node name="ActivePosition" type="CenterContainer" parent="BattleLayout/PlayerBattleArea/ShinobiContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="BattleLayout/PlayerBattleArea/ShinobiContainer/ActivePosition"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardSlot" parent="BattleLayout/PlayerBattleArea/ShinobiContainer/ActivePosition/Control" groups=["active_slot"] instance=ExtResource("1_3hov6")]
+position = Vector2(0, -50)
+
+[node name="SupportPosition2" type="CenterContainer" parent="BattleLayout/PlayerBattleArea/ShinobiContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="BattleLayout/PlayerBattleArea/ShinobiContainer/SupportPosition2"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardSlot" parent="BattleLayout/PlayerBattleArea/ShinobiContainer/SupportPosition2/Control" groups=["support_slot"] instance=ExtResource("1_3hov6")]
+position = Vector2(0, 50)
+
+[node name="PlayerHandContainer" type="MarginContainer" parent="BattleLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HandCards" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer"]
+layout_mode = 2
+
+[node name="ChakraContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer"]
+layout_mode = 2
+
+[node name="TaijutsuContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/TaijutsuContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/TaijutsuContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NinjutsuContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/NinjutsuContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/NinjutsuContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BloodlineContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/BloodlineContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/BloodlineContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GenjutsuContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/GenjutsuContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/GenjutsuContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RandomContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/RandomContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 2
+
+[node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/RandomContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HandContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 8.0
+
+[node name="BattleControls" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="EndTurnButton" type="Button" parent="BattleControls"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 521.0
+offset_top = 603.0
+offset_right = -39.0
+offset_bottom = -602.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+text = "End Turn"
+
+[node name="BattleOverlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_ugm31")
+
+[node name="OverlayColor" type="ColorRect" parent="BattleOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.174626, 0.174626, 0.174626, 0.347)
+
+[node name="OverlayLayout" type="VBoxContainer" parent="BattleOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OppHandContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="OppFieldContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.5
+
+[node name="PlayerFieldContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout"]
+z_index = 2
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.5
+
+[node name="CardContainer" type="CenterContainer" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CardContainer"]
+layout_mode = 2
+
+[node name="CardSlot" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CardContainer/Control" instance=ExtResource("1_3hov6")]
+
+[node name="DetectionArea" type="Area2D" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CardContainer/Control"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CardContainer/Control/DetectionArea"]
+visible = false
+shape = SubResource("RectangleShape2D_ugm31")
+
+[node name="CenterContainer" type="CenterContainer" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ActionContainer" type="VBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer"]
+custom_minimum_size = Vector2(240, 240)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Ability" type="CenterContainer" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer/ActionContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Button" type="Button" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer/ActionContainer/Ability"]
+custom_minimum_size = Vector2(350, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "ABILITY"
+autowrap_mode = 3
+
+[node name="Attack" type="CenterContainer" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer/ActionContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Button" type="Button" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer/ActionContainer/Attack"]
+custom_minimum_size = Vector2(350, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "ATTACK"
+autowrap_mode = 3
+
+[node name="Control" type="Control" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer"]
+layout_mode = 2
+
+[node name="DetectionArea" type="Area2D" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer/Control"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer/CenterContainer/Control/DetectionArea"]
+visible = false
+shape = SubResource("RectangleShape2D_ugm31")
+
+[node name="PlayerHandContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ChakraContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer"]
+layout_mode = 2
+
+[node name="TaijutsuContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/TaijutsuContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/TaijutsuContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NinjutsuContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/NinjutsuContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/NinjutsuContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BloodlineContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/BloodlineContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/BloodlineContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GenjutsuContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/GenjutsuContainer"]
+custom_minimum_size = Vector2(30, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 3
+
+[node name="Label" type="Label" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/GenjutsuContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RandomContainer" type="HBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/RandomContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 2
+
+[node name="Label" type="Label" parent="BattleOverlay/OverlayLayout/PlayerHandContainer/ChakraContainer/VBoxContainer/RandomContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "1"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="BattleOverlay/OverlayLayout/PlayerHandContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 8.0

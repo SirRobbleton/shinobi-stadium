@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3 uid="uid://cc2ldxi27dh33"]
+
+[ext_resource type="Script" uid="uid://3c3m2m8fogum" path="res://scripts/ui/card_slot.gd" id="1_qx3y6"]
+
+[sub_resource type="Theme" id="Theme_lquwl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_h2yge"]
+size = Vector2(160, 240)
+
+[node name="CardSlot" type="Area2D" groups=["card_slots"]]
+z_as_relative = false
+script = ExtResource("1_qx3y6")
+
+[node name="TextureRect" type="ColorRect" parent="."]
+custom_minimum_size = Vector2(160, 240)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme = SubResource("Theme_lquwl")
+color = Color(1, 1, 1, 0.196078)
+metadata/_edit_use_anchors_ = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_h2yge")

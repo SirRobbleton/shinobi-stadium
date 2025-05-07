@@ -1,0 +1,149 @@
+[gd_scene load_steps=9 format=3 uid="uid://bovi23yf8c4uk"]
+
+[ext_resource type="Shader" uid="uid://djs7a4c1jackv" path="res://scenes/selection/character_card_backlight.gdshader" id="1_bqxkg"]
+[ext_resource type="Script" uid="uid://bbtccol8rkhod" path="res://scripts/objects/character_card.gd" id="1_yrlot"]
+[ext_resource type="Shader" uid="uid://drjskxiimuoxd" path="res://scenes/selection/character_card_target.gdshader" id="2_yrlot"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kq5d4"]
+size = Vector2(205, 271)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2aaa4"]
+shader = ExtResource("1_bqxkg")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ybnyk"]
+bg_color = Color(1, 1, 0, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_murwl"]
+shader = ExtResource("2_yrlot")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hsjs0"]
+bg_color = Color(0.8, 0.5, 0.3, 1)
+
+[node name="CharacterCard" type="Node2D" groups=["card", "character"]]
+z_index = 5
+z_as_relative = false
+script = ExtResource("1_yrlot")
+
+[node name="RigidBody2D" type="RigidBody2D" parent="."]
+scale = Vector2(1.00266, 1.00678)
+input_pickable = true
+gravity_scale = 0.0
+freeze = true
+linear_damp = 5.0
+angular_damp = 5.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RigidBody2D"]
+shape = SubResource("RectangleShape2D_kq5d4")
+
+[node name="CharacterVisuals" type="Node2D" parent="RigidBody2D"]
+
+[node name="Portrait" type="TextureRect" parent="RigidBody2D/CharacterVisuals"]
+z_index = 1
+custom_minimum_size = Vector2(140, 210)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -83.0
+offset_top = -118.0
+offset_right = 83.0
+offset_bottom = 118.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+expand_mode = 1
+stretch_mode = 6
+metadata/_edit_use_anchors_ = true
+
+[node name="HPColor" type="ColorRect" parent="RigidBody2D/CharacterVisuals/Portrait"]
+custom_minimum_size = Vector2(60, 30)
+layout_mode = 1
+offset_right = 60.0
+offset_bottom = 30.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+color = Color(0, 0, 0, 1)
+
+[node name="HPLabel" type="Label" parent="RigidBody2D/CharacterVisuals/Portrait/HPColor"]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -36.0
+offset_top = -15.0
+offset_right = -6.0
+offset_bottom = 15.0
+grow_horizontal = 0
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.236922, 0.781677, 0.39145, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HPBaseLabel" type="Label" parent="RigidBody2D/CharacterVisuals/Portrait/HPColor"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 5.0
+offset_top = -15.0
+offset_right = 25.0
+offset_bottom = 15.0
+grow_vertical = 2
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "HP"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BacklightPanel" type="Panel" parent="RigidBody2D/CharacterVisuals/Portrait"]
+visible = false
+z_index = -1
+material = SubResource("ShaderMaterial_2aaa4")
+custom_minimum_size = Vector2(170, 235)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 168.0
+offset_bottom = 238.0
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ybnyk")
+
+[node name="TargetPanel" type="Panel" parent="RigidBody2D/CharacterVisuals/Portrait"]
+visible = false
+z_index = -1
+material = SubResource("ShaderMaterial_murwl")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hsjs0")
+
+[node name="PressTimer" type="Timer" parent="."]
+
+[connection signal="mouse_entered" from="RigidBody2D" to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="RigidBody2D" to="." method="_on_mouse_exited"]
+[connection signal="mouse_entered" from="RigidBody2D/CharacterVisuals/Portrait" to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="RigidBody2D/CharacterVisuals/Portrait" to="." method="_on_mouse_exited"]
