@@ -61,16 +61,16 @@ func _ready():
 	game_state.start_battle()
 	
 	# Log battle start
-	print("[BATTLE_SCENE| Battle started with:")
+	Logger.info("BATTLE", "Battle started with:")
 	for character in [CharacterSelection.active_shinobi, CharacterSelection.support_shinobi_1, CharacterSelection.support_shinobi_2]:
-		print("[BATTLE_SCENE| - Player: " + character.name)
+		Logger.info("BATTLE", "- Player: " + character.name)
 	for character in CharacterSelection.opponent_shinobi:
-		print("[BATTLE_SCENE| - Opponent: " + character.name)
+		Logger.info("BATTLE", "- Opponent: " + character.name)
 
 # Initialize the chakra system
 func _initialize_chakra_system():
 	# No need to create the ChakraDisplay script anymore as functionality is in BattleStateManager
-	print("[BATTLE_SCENE] Chakra system will be handled by BattleStateManager")
+	Logger.info("BATTLE", "Chakra system will be handled by BattleStateManager")
 	
 	# Force drawing initial chakra happens in BattleStateManager.start_game()
 	
@@ -84,7 +84,7 @@ func _initialize_battle_phase_ui():
 		battle_phase_ui.name = "BattlePhaseUI"
 		battle_phase_ui.set_script(load("res://scripts/ui/battle_phase_ui.gd"))
 		add_child(battle_phase_ui)
-		print("[BATTLE_SCENE] Initialized BattlePhaseUI")
+		Logger.info("BATTLE", "Initialized BattlePhaseUI")
 		
 	# Start the battle state machine
 	var battle_state = get_node_or_null("/root/BattleStateManager")
@@ -93,7 +93,7 @@ func _initialize_battle_phase_ui():
 
 # Handler for when an attack requires a target
 func _on_target_required(attacker_data: CharacterData):
-	print("[BATTLE_SCENE] Target required for attack from: " + attacker_data.name)
+	Logger.info("BATTLE", "Target required for attack from: " + attacker_data.name)
 	
 	# Find opponent's active character
 	var opponent_active = find_opponent_active_shinobi()
@@ -101,23 +101,23 @@ func _on_target_required(attacker_data: CharacterData):
 		# Apply highlight effect to indicate it's the target
 		highlight_character(opponent_active)
 	else:
-		print("[BATTLE_SCENE] Error: No opponent active character found to highlight!")
+		Logger.warning("BATTLE", "Error: No opponent active character found to highlight!")
 
 # Triggered when an attack is initiated
 func _on_attack_initiated(attacker_data: CharacterData):
-	print("[BATTLE_SCENE] Attack initiated by: " + attacker_data.name)
+	Logger.info("BATTLE", "Attack initiated by: " + attacker_data.name)
 	# Additional attack initialization can be added here
 
 # Triggered when an attack is performed
 func _on_attack_performed(attacker_data: CharacterData, target_data: CharacterData, target_defeated: bool):
-	print("[BATTLE_SCENE] Attack performed: " + attacker_data.name + " -> " + target_data.name)
+	Logger.info("BATTLE", "Attack performed: " + attacker_data.name + " -> " + target_data.name)
 	
 	# Add visual effects for the attack
 	# Here we could add animations, particles, etc.
 	
 	# Handle defeated character if necessary
 	if target_defeated:
-		print("[BATTLE_SCENE] Character defeated: " + target_data.name)
+		Logger.info("BATTLE", "Character defeated: " + target_data.name)
 		
 		# Find the character card associated with this data
 		var target_character = null
@@ -159,21 +159,21 @@ func find_opponent_active_shinobi():
 
 # Highlight a character as targetable (for attack)
 func highlight_character(character):
-	print("[HIGHLIGHT_DEBUG] Highlighting character: " + character.get_character_name())
+	Logger.info("HIGHLIGHT_DEBUG", "Highlighting character: " + character.get_character_name())
 	
 	# Set card as a target using both the meta tag and property if available
 	character.set_meta("is_target", true)
 	if character.has_method("set_targetable"):
 		character.set_targetable(true)
-		print("[HIGHLIGHT_DEBUG] Set as targetable using property")
+		Logger.info("HIGHLIGHT_DEBUG", "Set as targetable using property")
 		
 	# Create target panel for targeting UI if it doesn't exist
 	if !character.has_node("RigidBody2D/CharacterVisuals/Portrait/TargetPanel"):
-		print("[HIGHLIGHT_DEBUG] ERROR: CharacterVisuals not found, could not add TargetPanel")
+		Logger.warning("HIGHLIGHT_DEBUG", "ERROR: CharacterVisuals not found, could not add TargetPanel")
 	else:
 		var target_panel = character.get_node("RigidBody2D/CharacterVisuals/Portrait/TargetPanel")
 		target_panel.visible = true
-		print("[HIGHLIGHT_DEBUG] Made existing TargetPanel visible")
+		Logger.info("HIGHLIGHT_DEBUG", "Made existing TargetPanel visible")
 	
 	# Set the BacklightPanel color for hover effect (but don't make it visible yet)
 	#var backlight = character.get_node_or_null("RigidBody2D/CharacterVisuals/Portrait/BacklightPanel")
@@ -186,37 +186,37 @@ func highlight_character(character):
 	# Enable hover detection
 	if character.has_method("set_hover_detection"):
 		character.set_hover_detection(true)
-		print("[HIGHLIGHT_DEBUG] Enabled hover detection")
+		Logger.info("HIGHLIGHT_DEBUG", "Enabled hover detection")
 	else:
-		print("[HIGHLIGHT_DEBUG] WARNING: No set_hover_detection method available")
+		Logger.warning("HIGHLIGHT_DEBUG", "WARNING: No set_hover_detection method available")
 	
 	# Make sure RigidBody2D is pickable
 	if character.has_node("RigidBody2D"):
 		character.get_node("RigidBody2D").input_pickable = true
-		print("[HIGHLIGHT_DEBUG] Set RigidBody2D.input_pickable = true")
+		Logger.info("HIGHLIGHT_DEBUG", "Set RigidBody2D.input_pickable = true")
 	
 	# Connect to target_clicked signal if available and not already connected
 	if character.has_signal("target_clicked"):
 		if !character.is_connected("target_clicked", Callable(self, "_on_target_clicked")):
 			character.connect("target_clicked", Callable(self, "_on_target_clicked"))
-			print("[HIGHLIGHT_DEBUG] Connected to target_clicked signal")
+			Logger.info("HIGHLIGHT_DEBUG", "Connected to target_clicked signal")
 		else:
-			print("[HIGHLIGHT_DEBUG] Already connected to target_clicked signal")
+			Logger.info("HIGHLIGHT_DEBUG", "Already connected to target_clicked signal")
 	else:
-		print("[HIGHLIGHT_DEBUG] WARNING: target_clicked signal not available")
+		Logger.warning("HIGHLIGHT_DEBUG", "WARNING: target_clicked signal not available")
 	
 	# Create pulsating scale effect for target
 	var scale_tween = create_tween()
 	scale_tween.set_loops()
 	scale_tween.tween_property(character, "scale", character.scale * 1.1, 2.0)
 	scale_tween.tween_property(character, "scale", character.scale, 0.5)
-	print("[HIGHLIGHT_DEBUG] Created pulsating scale effect")
+	Logger.info("HIGHLIGHT_DEBUG", "Created pulsating scale effect")
 	
-	print("[HIGHLIGHT_DEBUG] Character highlighted successfully")
+	Logger.info("HIGHLIGHT_DEBUG", "Character highlighted successfully")
 
 # Clear all highlighted characters
 func clear_highlights():
-	print("[HIGHLIGHT_DEBUG] Clearing all target highlights")
+	Logger.info("HIGHLIGHT_DEBUG", "Clearing all target highlights")
 	var character_cards = get_tree().get_nodes_in_group("character")
 	var highlight_count = 0
 	
@@ -244,38 +244,38 @@ func clear_highlights():
 		if card.has_signal("target_clicked") and card.is_connected("target_clicked", Callable(self, "_on_target_clicked")):
 			card.disconnect("target_clicked", Callable(self, "_on_target_clicked"))
 	
-	print("[HIGHLIGHT_DEBUG] Cleared highlights from " + str(highlight_count) + " cards")
+	Logger.info("HIGHLIGHT_DEBUG", "Cleared highlights from " + str(highlight_count) + " cards")
 
 # Find the player's active character
 func get_active_character():
 	# First check the active slot
 	if player_slot_active.held_card:
-		print("[BATTLE_SCENE] Found active character: " + player_slot_active.held_card.get_character_name())
+		Logger.info("BATTLE_SCENE", "Found active character: " + player_slot_active.held_card.get_character_name())
 		return player_slot_active.held_card
 	
 	# If not found, look through all character cards
 	var character_cards = get_tree().get_nodes_in_group("character")
 	for card in character_cards:
 		if card.player_owned and card.is_active:
-			print("[BATTLE_SCENE] Found active character through search: " + card.get_character_name())
+			Logger.info("BATTLE_SCENE", "Found active character through search: " + card.get_character_name())
 			return card
 	
 	# If still not found, get the battle overlay's current character
 	var battle_overlay = get_node_or_null("BattleOverlay")
 	if battle_overlay and battle_overlay.current_character:
-		print("[BATTLE_SCENE] Using battle overlay's current character")
+		Logger.info("BATTLE_SCENE", "Using battle overlay's current character")
 		var all_character_cards = get_tree().get_nodes_in_group("character")
 		for card in all_character_cards:
 			if card.character_data == battle_overlay.current_character:
-				print("[BATTLE_SCENE] Found card matching battle overlay character: " + card.get_character_name())
+				Logger.info("BATTLE_SCENE", "Found card matching battle overlay character: " + card.get_character_name())
 				return card
 			
-	print("[BATTLE_SCENE] WARNING: Could not find active character")
+	Logger.warning("BATTLE_SCENE", "WARNING: Could not find active character")
 	return null
 
 # Handle target clicked signal from character card
 func _on_target_clicked(character):
-	print("[BATTLE_SCENE] Target clicked: " + character.get_character_name())
+	Logger.info("BATTLE_SCENE", "Target clicked: " + character.get_character_name())
 	
 	# Process the attack with this target
 	process_attack(character)
@@ -283,13 +283,13 @@ func _on_target_clicked(character):
 # Properly handle character clicks for targets
 func process_attack(character):
 	# Log card position and slot information
-	print("[CLICK_DEBUG] Character position: " + str(character.global_position))
+	Logger.info("CLICK_DEBUG", "Character position: " + str(character.global_position))
 	
 	if character.has_meta("slot_reference"):
 		var slot = character.get_meta("slot_reference")
-		print("[CLICK_DEBUG] Character slot position: " + str(slot.global_position))
+		Logger.info("CLICK_DEBUG", "Character slot position: " + str(slot.global_position))
 	else:
-		print("[CLICK_DEBUG] WARNING: Character has no slot reference!")
+		Logger.warning("CLICK_DEBUG", "WARNING: Character has no slot reference!")
 	
 	# Check if character is targetable properly
 	var is_target_by_meta = character.has_meta("is_target")
@@ -297,52 +297,53 @@ func process_attack(character):
 	if "is_targetable" in character:
 		is_targetable_property = character.is_targetable
 	
-	print("[CLICK_DEBUG] Targetable status - By meta: " + str(is_target_by_meta) + 
+	Logger.info("CLICK_DEBUG", "Targetable status - By meta: " + str(is_target_by_meta) + 
 		", By property: " + str(is_targetable_property))
 	
 	# Ignore clicks if this isn't marked as a target
 	if !is_target_by_meta and !is_targetable_property:
-		print("[CLICK_DEBUG] Character is not marked as a target, ignoring click")
+		Logger.info("CLICK_DEBUG", "Character is not marked as a target, ignoring click")
 		return
 	
 	# Get the character data for the target
 	var target_data = character.character_data
-	print("[CLICK_DEBUG] Target data: " + target_data.name + ", HP: " + str(target_data.current_hp) + "/" + str(target_data.hp))
+	Logger.info("CLICK_DEBUG", "Target data: " + target_data.name + ", HP: " + str(target_data.current_hp) + "/" + str(target_data.hp))
 	
 	# Get the current attacker from the battle overlay
 	var battle_overlay = get_node_or_null("BattleOverlay")
 	if !battle_overlay or !battle_overlay.current_character:
-		print("[CLICK_DEBUG] ERROR: No active attacker found in battle overlay")
+		Logger.warning("CLICK_DEBUG", "ERROR: No active attacker found in battle overlay")
 		return
 	
 	# Get the attacker data
 	var attacker_data = battle_overlay.current_character
-	print("[CLICK_DEBUG] Attacker data: " + attacker_data.name)
+	Logger.info("CLICK_DEBUG", "Attacker data: " + attacker_data.name)
 	
-	print("[CLICK_DEBUG] Processing attack: " + attacker_data.name + " -> " + target_data.name)
+	Logger.info("CLICK_DEBUG", "Processing attack: " + attacker_data.name + " -> " + target_data.name)
 	
 	# Perform the attack
 	var result = GamestateManager.perform_attack(attacker_data, target_data)
-	print("[CLICK_DEBUG] Attack result: " + str(result))
+	Logger.info("CLICK_DEBUG", "Attack result: " + str(result))
 	
 	# Hide the battle overlay after attack
 	GamestateManager.hide_battle_overlay(true)
-	print("[CLICK_DEBUG] Battle overlay hidden")
+	Logger.info("CLICK_DEBUG", "Battle overlay hidden")
 	
 	# Clear highlight
 	clear_highlights()
-	print("[CLICK_DEBUG] Highlights cleared")
-	print("[CLICK_DEBUG] ========== ATTACK COMPLETE ==========")
+	Logger.info("CLICK_DEBUG", "Highlights cleared")
+	Logger.info("CLICK_DEBUG", "========== ATTACK COMPLETE ==========")
 
 func place_player_shinobi():
+		
 	#Initialise characters
 	var active_character = character_card_scene.instantiate()
-	active_character.character_data = CharacterSelection.active_shinobi
+	active_character.setup(CharacterSelection.active_shinobi)
 	var support_1_character = character_card_scene.instantiate()
-	support_1_character.character_data = CharacterSelection.support_shinobi_1
+	support_1_character.setup(CharacterSelection.support_shinobi_1)
 	#await support_1_character.setup(CharacterSelection.support_shinobi_1)
 	var support_2_character = character_card_scene.instantiate()
-	support_2_character.character_data = CharacterSelection.support_shinobi_2
+	support_2_character.setup(CharacterSelection.support_shinobi_2)
 	#await support_2_character.setup(CharacterSelection.support_shinobi_2)
 	
 	# Place player selected shinobi on their slots
@@ -370,7 +371,7 @@ func place_character_on_slot(card: CharacterCard, slot: CardSlot):
 	#if character_data.current_hp <= 0:
 	#	print("[BATTLE_SCENE] WARNING: Character " + character_data.name + " has 0 HP, resetting to max")
 	#	character_data.reset_hp()
-	print("[BATTLE_SCENE] Placing " + card.character_data.name + " on slot " + str(slot))
+	Logger.info("BATTLE_SCENE", "Placing " + card.character_data.name + " on slot " + str(slot))
 
 	# Create a new card instance
 	
@@ -395,10 +396,10 @@ func place_character_on_slot(card: CharacterCard, slot: CardSlot):
 	# Set active flag based on position
 	if slot == player_slot_active or slot == opponent_slots[1]:
 		#card.is_active = true
-		print("actuve player")
+		Logger.info("BATTLE_SCENE", "actuve player")
 	else:
 		#card.is_support = true
-		print("support player")
+		Logger.info("BATTLE_SCENE", "support player")
 
 	# Set player ownership flag
 	card.player_owned = slot in [player_slot_active, player_slot_support1, player_slot_support2]
@@ -410,7 +411,7 @@ func place_character_on_slot(card: CharacterCard, slot: CardSlot):
 		card.current_slot != null
 		# Store slot reference using set_meta instead of using current_slot directly
 		card.set_meta("slot_reference", slot)
-		print("[BATTLE_SCENE] Enabled dragging for player card: " + card.character_data.name)
+		Logger.info("BATTLE_SCENE", "Enabled dragging for player card: " + card.character_data.name)
 		
 		# Connect drag signals
 		if not card.is_connected("drag_started", Callable(self, "_on_card_drag_started")):
@@ -430,37 +431,37 @@ func place_character_on_slot(card: CharacterCard, slot: CardSlot):
 	slot.held_card = card
 	#slot.disable_collision()
 	
-	print("[BATTLE_SCENE| Placed " + card.character_data.name + " on a battle slot")
+	Logger.info("BATTLE_SCENE", "Placed " + card.character_data.name + " on a battle slot")
 	
 	return card
 
 # Handle card drag starting
 func _on_card_drag_started(card):
-	print("[DRAG_DEBUG] ====== DRAG STARTED ======")
-	print("[DRAG_DEBUG] Card: " + card.character_data.name)
-	print("[DRAG_DEBUG] Current Slot: " + (card.current_slot.name if card.current_slot else "None"))
-	print("[DRAG_DEBUG] Slot Reference: " + (card.get_meta("slot_reference").name if card.has_meta("slot_reference") else "None"))
-	print("[DRAG_DEBUG] Card Position: " + str(card.global_position))
-	print("[DRAG_DEBUG] Card State: " + str(card.current_state))
-	print("[DRAG_DEBUG] Is Dragging: " + str(card.is_dragging))
+	Logger.info("DRAG_DEBUG", "====== DRAG STARTED ======")
+	Logger.info("DRAG_DEBUG", "Card: " + card.character_data.name)
+	Logger.info("DRAG_DEBUG", "Current Slot: " + (card.current_slot.name if card.current_slot else "None"))
+	Logger.info("DRAG_DEBUG", "Slot Reference: " + (card.get_meta("slot_reference").name if card.has_meta("slot_reference") else "None"))
+	Logger.info("DRAG_DEBUG", "Card Position: " + str(card.global_position))
+	Logger.info("DRAG_DEBUG", "Card State: " + str(card.current_state))
+	Logger.info("DRAG_DEBUG", "Is Dragging: " + str(card.is_dragging))
 	
 	if game_state.current_player == "player" and not game_state.in_battle_phase:
-		print("[DRAG_DEBUG] Valid drag conditions met")
+		Logger.info("DRAG_DEBUG", "Valid drag conditions met")
 		# Show valid target slots by making other player cards targetable
 		set_valid_switch_targets(card, true)
 	else:
-		print("[DRAG_DEBUG] Invalid drag conditions - Player: " + game_state.current_player + ", Battle Phase: " + str(game_state.in_battle_phase))
+		Logger.info("DRAG_DEBUG", "Invalid drag conditions - Player: " + game_state.current_player + ", Battle Phase: " + str(game_state.in_battle_phase))
 
 # Handle card drag ending
 func _on_card_drag_ended(card, target):
-	print("[DRAG_DEBUG] ====== DRAG ENDED ======")
-	print("[DRAG_DEBUG] Card: " + card.character_data.name)
-	print("[DRAG_DEBUG] Target: " + (target.character_data.name if target else "None"))
-	print("[DRAG_DEBUG] Current Slot: " + (card.current_slot.name if card.current_slot else "None"))
-	print("[DRAG_DEBUG] Slot Reference: " + (card.get_meta("slot_reference").name if card.has_meta("slot_reference") else "None"))
-	print("[DRAG_DEBUG] Card Position: " + str(card.global_position))
-	print("[DRAG_DEBUG] Card State: " + str(card.current_state))
-	print("[DRAG_DEBUG] Is Dragging: " + str(card.is_dragging))
+	Logger.info("DRAG_DEBUG", "====== DRAG ENDED ======")
+	Logger.info("DRAG_DEBUG", "Card: " + card.character_data.name)
+	Logger.info("DRAG_DEBUG", "Target: " + (target.character_data.name if target else "None"))
+	Logger.info("DRAG_DEBUG", "Current Slot: " + (card.current_slot.name if card.current_slot else "None"))
+	Logger.info("DRAG_DEBUG", "Slot Reference: " + (card.get_meta("slot_reference").name if card.has_meta("slot_reference") else "None"))
+	Logger.info("DRAG_DEBUG", "Card Position: " + str(card.global_position))
+	Logger.info("DRAG_DEBUG", "Card State: " + str(card.current_state))
+	Logger.info("DRAG_DEBUG", "Is Dragging: " + str(card.is_dragging))
 	
 	# Hide the target indicators
 	set_valid_switch_targets(card, false)
@@ -472,28 +473,28 @@ func _on_card_drag_ended(card, target):
 	for target_card in character_cards:
 		if target_card.player_owned and target_card.is_targetable == true:
 			other_player_cards.append(target_card)
-			print("[DRAG_DEBUG] Found targetable card: " + target_card.character_data.name)
+			Logger.info("DRAG_DEBUG", "Found targetable card: " + target_card.character_data.name)
 	
-	print("[DRAG_DEBUG] Found " + str(other_player_cards.size()) + " other player cards")
+	Logger.info("DRAG_DEBUG", "Found " + str(other_player_cards.size()) + " other player cards")
 	
 	if other_player_cards.size() > 0:
 		var target_card = other_player_cards[0]  # Just take the first available card
-		print("[DRAG_DEBUG] Attempting switch with: " + target_card.character_data.name)
+		Logger.info("DRAG_DEBUG", "Attempting switch with: " + target_card.character_data.name)
 		
 		# Check switch conditions directly
 		var can_switch = game_state.current_player == "player" and !game_state.has_switched_this_turn and !game_state.in_battle_phase
 		
 		if can_switch:
-			print("[DRAG_DEBUG] Switch conditions met, executing switch")
+			Logger.info("DRAG_DEBUG", "Switch conditions met, executing switch")
 			# Force direct swap of positions without any further checks
 			_emergency_switch_positions(card, target_card)
 		else:
-			print("[DRAG_DEBUG] Switch rejected - Current turn: " + game_state.current_player + 
+			Logger.info("DRAG_DEBUG", "Switch rejected - Current turn: " + game_state.current_player + 
 				  ", Already switched: " + str(game_state.has_switched_this_turn) + 
 				  ", Battle phase: " + str(game_state.in_battle_phase))
 			_return_card_to_original_position(card)
 	else:
-		print("[DRAG_DEBUG] No other player cards found, returning to original position")
+		Logger.info("DRAG_DEBUG", "No other player cards found, returning to original position")
 		_return_card_to_original_position(card)
 
 # Show or hide targetable indicators on player cards
@@ -504,7 +505,7 @@ func set_valid_switch_targets(source_card, show):
 			if card.has_method("set_targetable"):
 				card.set_targetable(show)
 				if show:
-					print("[BATTLE_SCENE] Setting " + card.character_data.name + " as targetable")
+					Logger.info("BATTLE_SCENE", "Setting " + card.character_data.name + " as targetable")
 
 # Helper function to find the nearest player slot to a position
 func find_nearest_player_slot(position):
@@ -526,14 +527,14 @@ func find_nearest_player_slot(position):
 
 # Handle card switching animation after GamestateManager approves
 func _on_switch_performed(source_card, target_card):
-	print("[BATTLE_SCENE] Switch performed between " + source_card.character_data.name + " and " + target_card.character_data.name)
+	Logger.info("BATTLE_SCENE", "Switch performed between " + source_card.character_data.name + " and " + target_card.character_data.name)
 	
 	# Use enhanced _switch_card_positions which handles the actual swapping
 	_switch_card_positions(source_card, target_card)
 
 # Actually switch the character positions
 func _switch_card_positions(source_card, target_card):
-	print("[BATTLE_SCENE| Switching positions between " + source_card.character_data.name + " and " + target_card.character_data.name)
+	Logger.info("BATTLE_SCENE", "Switching positions between " + source_card.character_data.name + " and " + target_card.character_data.name)
 	
 	# Get the slots for both cards using meta data
 	var source_slot = source_card.get_meta("slot_reference") if source_card.has_meta("slot_reference") else null
@@ -551,7 +552,7 @@ func _switch_card_positions(source_card, target_card):
 				target_slot = slot
 				
 		if !source_slot or !target_slot:
-			push_error("Could not find slots for source or target card")
+			Logger.error("BATTLE_SCENE", "Could not find slots for source or target card")
 			return
 	
 	# Update character data state too
@@ -588,7 +589,7 @@ func _on_end_turn_pressed():
 
 func _on_turn_changed(new_player):
 	# Handle turn changes
-	print("[BATTLE_SCENE| Turn changed to: " + new_player)
+	Logger.info("BATTLE_SCENE", "Turn changed to: " + new_player)
 	
 	# Disable the end turn button during opponent's turn
 	end_turn_button.disabled = (new_player != "player")
@@ -599,7 +600,7 @@ func _on_turn_changed(new_player):
 		
 func handle_opponent_turn():
 	# Simple opponent AI
-	print("[BATTLE_SCENE| Opponent is thinking...")
+	Logger.info("BATTLE_SCENE", "Opponent is thinking...")
 	
 	# Wait a bit, then end the opponent's turn
 	await get_tree().create_timer(1.5).timeout
@@ -607,40 +608,40 @@ func handle_opponent_turn():
 
 # Handle switch request from a character card
 func _on_card_switch_requested(source_card, target_card):
-	print("[BATTLE_SCENE| Direct switch requested from " + source_card.character_data.name + " to " + target_card.character_data.name)
+	Logger.info("BATTLE_SCENE", "Direct switch requested from " + source_card.character_data.name + " to " + target_card.character_data.name)
 	
 	# Verify that both cards exist and have valid data
 	if !is_instance_valid(source_card) or !is_instance_valid(target_card):
-		print("[BATTLE_SCENE| ERROR: One of the cards is invalid")
+		Logger.warning("BATTLE_SCENE", "ERROR: One of the cards is invalid")
 		return
 		
 	if !source_card.character_data or !target_card.character_data:
-		print("[BATTLE_SCENE| ERROR: One of the cards has no character data")
+		Logger.warning("BATTLE_SCENE", "ERROR: One of the cards has no character data")
 		return
 	
 	# Ensure both cards are player's cards
 	if !source_card.player_owned or !target_card.player_owned:
-		print("[BATTLE_SCENE| ERROR: Both cards must be player owned")
+		Logger.warning("BATTLE_SCENE", "ERROR: Both cards must be player owned")
 		return
 	
 	# Check if switch is allowed via gamestate manager
-	print("[BATTLE_SCENE| Requesting direct switch from GamestateManager")
+	Logger.info("BATTLE_SCENE", "Requesting direct switch from GamestateManager")
 	if game_state.perform_switch(source_card, target_card):
-		print("[BATTLE_SCENE| Direct switch approved by GamestateManager")
+		Logger.info("BATTLE_SCENE", "Direct switch approved by GamestateManager")
 		
 		# Get the slots for both cards
 		var source_slot = source_card.get_meta("slot_reference") if source_card.has_meta("slot_reference") else source_card.current_slot
 		var target_slot = target_card.get_meta("slot_reference") if target_card.has_meta("slot_reference") else target_card.current_slot
 		
 		if source_slot and target_slot:
-			print("[BATTLE_SCENE| Starting direct position swap")
+			Logger.info("BATTLE_SCENE", "Starting direct position swap")
 			
 			# Get the slot positions
 			var source_slot_pos = source_slot.global_position
 			var target_slot_pos = target_slot.global_position
 			
-			print("[BATTLE_SCENE| Switch Source Slot Position: " + str(source_slot_pos))
-			print("[BATTLE_SCENE| Switch Target Slot Position: " + str(target_slot_pos))
+			Logger.info("BATTLE_SCENE", "Switch Source Slot Position: " + str(source_slot_pos))
+			Logger.info("BATTLE_SCENE", "Switch Target Slot Position: " + str(target_slot_pos))
 			
 			# Update slot references
 			source_slot.held_card = target_card
@@ -657,20 +658,20 @@ func _on_card_switch_requested(source_card, target_card):
 			tween.parallel().tween_property(source_card.rigid_body, "global_position", target_slot_pos, 0.3)
 			tween.parallel().tween_property(target_card.rigid_body, "global_position", source_slot_pos, 0.3)
 
-			print("[BATTLE_SCENE| New Source Slot Position: " + str(source_card.position))
-			print("[BATTLE_SCENE| New Source Slot Position: " + str(source_card.global_position))
-			print("[BATTLE_SCENE| New Target Slot Position: " + str(target_card.global_position))
+			Logger.info("BATTLE_SCENE", "New Source Slot Position: " + str(source_card.position))
+			Logger.info("BATTLE_SCENE", "New Source Slot Position: " + str(source_card.global_position))
+			Logger.info("BATTLE_SCENE", "New Target Slot Position: " + str(target_card.global_position))
 			
 			# Play switch sound
 			if SfxManager != null:
 				SfxManager.play_sfx("switch")
 			
-			print("[BATTLE_SCENE| Direct card positions swapped")
+			Logger.info("BATTLE_SCENE", "Direct card positions swapped")
 		else:
-			print("[BATTLE_SCENE| ERROR: Missing slot references")
+			Logger.warning("BATTLE_SCENE", "ERROR: Missing slot references")
 			_switch_card_positions(source_card, target_card)
 	else:
-		print("[BATTLE_SCENE| Direct switch declined by GamestateManager")
+		Logger.warning("BATTLE_SCENE", "Direct switch declined by GamestateManager")
 		# Return cards to their original positions
 		_return_card_to_original_position(source_card)
 
@@ -678,26 +679,26 @@ func _on_card_switch_requested(source_card, target_card):
 func _return_card_to_original_position(card):
 	if card.has_meta("slot_reference"):
 		var original_slot = card.get_meta("slot_reference")
-		print("[BATTLE_SCENE] Returning " + card.character_data.name + " to original position")
+		Logger.info("BATTLE_SCENE", "Returning " + card.character_data.name + " to original position")
 		
 		# Create tween for smooth movement
 		var tween = create_tween()
 		tween.tween_property(card.rigid_body, "global_position", original_slot.global_position, 0.3)
 	else:
-		print("[BATTLE_SCENE] Warning: No original slot found for " + card.character_data.name)
+		Logger.warning("BATTLE_SCENE", "Warning: No original slot found for " + card.character_data.name)
 
 # Emergency direct position swap without any complex logic
 func _emergency_switch_positions(source_card, target_card):
-	print("[EMERGENCY_SWITCH] ====== EMERGENCY SWITCH ======")
-	print("[EMERGENCY_SWITCH] Source: " + source_card.character_data.name)
-	print("[EMERGENCY_SWITCH] Target: " + target_card.character_data.name)
+	Logger.info("EMERGENCY_SWITCH", "====== EMERGENCY SWITCH ======")
+	Logger.info("EMERGENCY_SWITCH", "Source: " + source_card.character_data.name)
+	Logger.info("EMERGENCY_SWITCH", "Target: " + target_card.character_data.name)
 	
 	# Get slots using both methods for compatibility
 	var source_slot = source_card.get_meta("slot_reference") if source_card.has_meta("slot_reference") else source_card.current_slot
 	var target_slot = target_card.get_meta("slot_reference") if target_card.has_meta("slot_reference") else target_card.current_slot
 	
 	if source_slot == null or target_slot == null:
-		print("[EMERGENCY_SWITCH] ERROR: Missing slot references, canceling emergency switch")
+		Logger.warning("EMERGENCY_SWITCH", "ERROR: Missing slot references, canceling emergency switch")
 		_return_card_to_original_position(source_card)
 		return
 	
@@ -705,8 +706,8 @@ func _emergency_switch_positions(source_card, target_card):
 	var source_slot_pos = source_slot.global_position
 	var target_slot_pos = target_slot.global_position
 	
-	print("[EMERGENCY_SWITCH] Source Slot Position: " + str(source_slot_pos))
-	print("[EMERGENCY_SWITCH] Target Slot Position: " + str(target_slot_pos))
+	Logger.info("EMERGENCY_SWITCH", "Source Slot Position: " + str(source_slot_pos))
+	Logger.info("EMERGENCY_SWITCH", "Target Slot Position: " + str(target_slot_pos))
 	
 	# First, update positions directly without tween
 	source_card.global_position = target_slot_pos
@@ -723,28 +724,28 @@ func _emergency_switch_positions(source_card, target_card):
 	target_card.current_slot = source_slot
 	
 	# Verify positions after all updates
-	print("[EMERGENCY_SWITCH] Verifying final positions:")
-	print("[EMERGENCY_SWITCH] Source card position: " + str(source_card.global_position))
-	print("[EMERGENCY_SWITCH] Target card position: " + str(target_card.global_position))
-	print("[EMERGENCY_SWITCH] Source slot position: " + str(target_slot.global_position))
-	print("[EMERGENCY_SWITCH] Target slot position: " + str(source_slot.global_position))
+	Logger.info("EMERGENCY_SWITCH", "Verifying final positions:")
+	Logger.info("EMERGENCY_SWITCH", "Source card position: " + str(source_card.global_position))
+	Logger.info("EMERGENCY_SWITCH", "Target card position: " + str(target_card.global_position))
+	Logger.info("EMERGENCY_SWITCH", "Source slot position: " + str(target_slot.global_position))
+	Logger.info("EMERGENCY_SWITCH", "Target slot position: " + str(source_slot.global_position))
 	
 	# If positions don't match, force them to match
 	if source_card.global_position != target_slot.global_position:
-		print("[EMERGENCY_SWITCH] Correcting source card position")
+		Logger.info("EMERGENCY_SWITCH", "Correcting source card position")
 		source_card.global_position = target_slot.global_position
 	if target_card.global_position != source_slot.global_position:
-		print("[EMERGENCY_SWITCH] Correcting target card position")
+		Logger.info("EMERGENCY_SWITCH", "Correcting target card position")
 		target_card.global_position = source_slot.global_position
 	
 	# Play switch sound
 	if SfxManager != null:
 		SfxManager.play_sfx("switch")
 	
-	print("[EMERGENCY_SWITCH] Switch completed successfully")
+	Logger.info("EMERGENCY_SWITCH", "Switch completed successfully")
 
 func _on_character_clicked(character):
-	print("[BATTLE_SCENE] Character clicked as regular interaction: " + character.get_character_name())
+	Logger.info("BATTLE_SCENE", "Character clicked as regular interaction: " + character.get_character_name())
 	
 	# This function handles normal clicks on characters that are not targets
 	# For now, we just log that the click happened
@@ -758,7 +759,7 @@ func _on_battle_overlay_visibility_changed():
 		return
 		
 	var is_visible = battle_overlay.visible
-	print("[BATTLE_SCENE] Battle overlay visibility changed to: " + str(is_visible))
+	Logger.info("BATTLE_SCENE", "Battle overlay visibility changed to: " + str(is_visible))
 	
 	var character_cards = get_tree().get_nodes_in_group("character")
 	
@@ -776,4 +777,4 @@ func _on_battle_overlay_visibility_changed():
 			if card.has_method("enable_card"):
 				card.enable_card()
 				
-	print("[BATTLE_SCENE] Updated card states for overlay visibility change")
+	Logger.info("BATTLE_SCENE", "Updated card states for overlay visibility change")

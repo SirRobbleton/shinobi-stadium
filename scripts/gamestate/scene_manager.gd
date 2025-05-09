@@ -41,10 +41,10 @@ func _initialize():
 	await get_tree().process_frame
 	
 	current_scene_node = get_tree().current_scene
-	print("CURRENT SCENE NODE 1: " + str(current_scene_node))
+	Logger.info("SCENE", "CURRENT SCENE NODE 1: " + str(current_scene_node))
 	if current_scene_node:
 		current_scene_path = current_scene_node.scene_file_path
-		print("[SCENE_MANAGER| Initial scene is " + current_scene_path)
+		Logger.info("SCENE", "Initial scene is " + current_scene_path)
 		
 		# Only apply scene config if we haven't changed scenes already
 		if not initialized:
@@ -57,16 +57,16 @@ func _initialize():
 				# Don't wait for the intro scene to decide to skip to selection
 				# Instead go directly to battle scene
 				await get_tree().process_frame
-				print("[SCENE_MANAGER| Skipping both intro and selection scenes")
+				Logger.info("SCENE", "Skipping both intro and selection scenes")
 				_skip_to_battle_scene()
 			# If we're in the selection scene and should skip it
 			elif skip_selection and current_scene_path == "res://scenes/selection/selection_scene.tscn":
 				await get_tree().process_frame
-				print("[SCENE_MANAGER| Skipping selection scene")
+				Logger.info("SCENE", "Skipping selection scene")
 				_skip_to_battle_scene()
 	else:
 		# Don't throw an error, just log it
-		print("[SCENE_MANAGER| WARNING: Could not get initial scene, will initialize later")
+		Logger.warning("SCENE", "Could not get initial scene, will initialize later")
 		# Wait for next frame and try again
 		await get_tree().process_frame
 		_initialize()
@@ -78,12 +78,12 @@ func _skip_to_battle_scene():
 	
 	# Change to battle scene
 	change_scene("res://scenes/battle/battle_scene.tscn")
-	print("CURRENT SCENE NODE 2: " + str(current_scene_node))
+	Logger.info("SCENE", "CURRENT SCENE NODE 2: " + str(current_scene_node))
 
 
 # Change to a new scene with automatic music handling
 func change_scene(new_scene_path: String):
-	print("[SCENE_MANAGER| Changing scene to " + new_scene_path)
+	Logger.info("SCENE", "Changing scene to " + new_scene_path)
 	
 	# If called before initialization, mark as initialized
 	if not initialized:
@@ -91,7 +91,7 @@ func change_scene(new_scene_path: String):
 	
 	# If this is the selection scene and we should skip it
 	if new_scene_path == "res://scenes/selection/selection_scene.tscn" and skip_selection:
-		print("[SCENE_MANAGER| Skipping selection scene, going straight to battle")
+		Logger.info("SCENE", "Skipping selection scene, going straight to battle")
 		new_scene_path = "res://scenes/battle/battle_scene.tscn"
 		
 		# Generate random characters
@@ -103,7 +103,7 @@ func change_scene(new_scene_path: String):
 	# Actually change the scene
 	var error = get_tree().change_scene_to_file(new_scene_path)
 	if error != OK:
-		push_error("SceneManager: Failed to change scene: " + str(error))
+		Logger.error("SCENE", "Failed to change scene: " + str(error))
 		return
 	
 	# Wait for the scene to be ready
@@ -112,7 +112,7 @@ func change_scene(new_scene_path: String):
 	# Update current scene tracking
 	current_scene_path = new_scene_path
 	current_scene_node = get_tree().current_scene
-	print("CURRENT SCENE NODE 3: " + str(current_scene_node))
+	Logger.info("SCENE", "CURRENT SCENE NODE 3: " + str(current_scene_node))
 
 	# Apply the appropriate music and other scene-specific settings
 	_apply_scene_config(new_scene_path)
@@ -123,22 +123,22 @@ func change_scene(new_scene_path: String):
 # Apply the configuration for a scene
 func _apply_scene_config(scene_path: String):
 	if not scene_config.has(scene_path):
-		print("[SCENE_MANAGER| No configuration for scene " + scene_path)
+		Logger.info("SCENE", "No configuration for scene " + scene_path)
 		return
 		
 	var config = scene_config[scene_path]
 	
 	# Apply music setting
 	if config.has("music"):
-		print("[SCENE_MANAGER| Playing music track: " + config["music"])
+		Logger.info("SCENE", "Playing music track: " + config["music"])
 		MusicManager.play_track(config["music"])
 	else:
-		print("[SCENE_MANAGER| No music specified for scene")
+		Logger.info("SCENE", "No music specified for scene")
 
 # Add a centralized function to check if current scene is battle scene
 func is_in_battle_scene() -> bool:
 	return current_scene_path == "res://scenes/battle/battle_scene.tscn"
 
-# Add a centralized function to check if current scene is battle scene
+# Add a centralized function to check if current scene is selection scene
 func is_in_selection_scene() -> bool:
 	return current_scene_path == "res://scenes/selection/selection_scene.tscn"

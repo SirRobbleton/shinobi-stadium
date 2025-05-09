@@ -18,17 +18,17 @@ signal chakra_drawn(player_id, new_chakra)
 func _ready():
     # Initialize empty chakra pools for both players
     reset_chakra_pools()
-    print("[CHAKRA_MANAGER] Initialized")
+    Logger.info("CHAKRA", "Initialized")
 
 func reset_chakra_pools():
     for player_id in ["player", "opponent"]:
         player_chakra[player_id] = {}
         for type in ChakraType.values():
             player_chakra[player_id][type] = 0
-    print("[CHAKRA_MANAGER] Reset chakra pools")
+    Logger.info("CHAKRA", "Reset chakra pools")
     
 func draw_chakra(player_id, amount=DEFAULT_CHAKRA_DRAW):
-    print("[CHAKRA_MANAGER] Drawing " + str(amount) + " chakra for " + player_id)
+    Logger.info("CHAKRA", "Drawing " + str(amount) + " chakra for " + player_id)
     var new_chakra = []
     
     # Generate random chakra for the player
@@ -40,7 +40,7 @@ func draw_chakra(player_id, amount=DEFAULT_CHAKRA_DRAW):
     emit_signal("chakra_updated", player_id, player_chakra[player_id])
     emit_signal("chakra_drawn", player_id, new_chakra)
     
-    print("[CHAKRA_MANAGER] Drew chakra: " + str(new_chakra))
+    Logger.info("CHAKRA", "Drew chakra: " + str(new_chakra))
     return new_chakra
 
 func add_chakra(player_id, chakra_type, amount=1):
@@ -48,7 +48,7 @@ func add_chakra(player_id, chakra_type, amount=1):
         player_chakra[player_id][chakra_type] = 0
     
     player_chakra[player_id][chakra_type] += amount
-    print("[CHAKRA_MANAGER] Added " + str(amount) + " " + 
+    Logger.info("CHAKRA", "Added " + str(amount) + " " + 
           ChakraType.keys()[chakra_type] + " chakra to " + player_id)
     
 # Get chakra count for a specific type
@@ -68,7 +68,7 @@ func can_afford(player_id, cost_dict):
 # Spend chakra if player can afford it
 func spend_chakra(player_id, cost_dict):
     if can_afford(player_id, cost_dict):
-        print("[CHAKRA_MANAGER] Spending chakra for " + player_id + ": " + str(cost_dict))
+        Logger.info("CHAKRA", "Spending chakra for " + player_id + ": " + str(cost_dict))
         
         for type in cost_dict:
             player_chakra[player_id][type] -= cost_dict[type]
@@ -77,7 +77,7 @@ func spend_chakra(player_id, cost_dict):
         emit_signal("chakra_spent", player_id, cost_dict)
         return true
     
-    print("[CHAKRA_MANAGER] Cannot afford chakra cost: " + str(cost_dict))
+    Logger.warning("CHAKRA", "Cannot afford chakra cost: " + str(cost_dict))
     return false
 
 # Get the type name as a string

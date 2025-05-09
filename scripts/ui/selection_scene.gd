@@ -34,7 +34,7 @@ var card_being_dragged = null
 func _ready():
 	# Check if we should skip this scene
 	if SceneManager.skip_selection:
-		print("[SELECTION_SCENE] Skipping selection scene as requested by SceneManager")
+		Logger.info("SELECTION", "Skipping selection scene as requested by SceneManager")
 		CharacterSelection.generate_random_characters()
 		await get_tree().process_frame
 		SceneManager.change_scene("res://scenes/battle/battle_scene.tscn")
@@ -43,7 +43,7 @@ func _ready():
 	CharacterSelection.connect("place_character_on_slot", place_character_on_slot)
 	
 	# Otherwise, proceed with normal setup
-	print("[SELECTION_SCENE| Scene loading normally")
+	Logger.info("SELECTION", "Scene loading normally")
 	
 	# Initialize node references
 	initialize_nodes()
@@ -72,13 +72,13 @@ func configure_ui_containers():
 func populate_character_grid():
 	# Ensure wrapper scene pointer
 	if not character_card_scene:
-		push_error("CharacterCardCell scene is not assigned!")
+		Logger.error("SELECTION", "CharacterCardCell scene is not assigned!")
 		return
 
 	# Get database instance
 	var character_db = load("res://scripts/data/character_database.gd").get_instance()
 	if not character_db:
-		push_error("CharacterDatabase not found!")
+		Logger.error("SELECTION", "CharacterDatabase not found!")
 		return
 
 	# Clear any existing cells
@@ -106,7 +106,7 @@ func populate_character_grid():
 func _process(_delta):
 	#if CharacterSelection.current_character and !current_character.is_connected("place_character_on_slot", place_character_on_slot):
 	#	current_character.connect("place_character_on_slot", place_character_on_slot)
-	#	print("[SELECTION_SCENE| Card selected: " + current_character.character_data.name)
+	#	Logger.info("SELECTION", "Card selected: " + current_character.character_data.name)
 	#else:
 	pass
 
@@ -152,19 +152,19 @@ func hide_zoom_overlay():
 
 # Card selected/deselected events
 func _on_card_selected(character_data, _source_card):
-	print("[SELECTION_SCENE| Card selected: " + character_data.name)
+	Logger.info("SELECTION", "Card selected: " + character_data.name)
 	
 func _on_card_deselected(character_data, _source_card):
-	print("[SELECTION_SCENE| Card deselected: " + character_data.name)
+	Logger.info("SELECTION", "Card deselected: " + character_data.name)
 
 # Start the battle when all slots are filled and button is pressed
 func _on_continue_pressed():
-	print("[SELECTION_SCENE| Continue pressed with selected characters: ", selected_characters)
+	Logger.info("SELECTION", "Continue pressed with selected characters: " + str(selected_characters))
 	
 	# Get the character database instance
 	var character_db = load("res://scripts/data/character_database.gd").get_instance()
 	if not character_db:
-		push_error("CharacterDatabase not found!")
+		Logger.error("SELECTION", "CharacterDatabase not found!")
 		return
 	
 	# Get character data from the selected cards
@@ -172,16 +172,16 @@ func _on_continue_pressed():
 	for card in selected_characters:
 		if "character_data" in card and card.character_data:
 			selected_character_data.append(card.character_data)
-			print("[SELECTION_SCENE| Adding character: " + card.character_data.name)
+			Logger.info("SELECTION", "Adding character: " + card.character_data.name)
 	
 	if selected_character_data.size() >= 3:
 		# Update global state with player's selected characters
 		CharacterSelection.active_shinobi = active_pos.held_card.character_data
 		CharacterSelection.support_shinobi_1 = support_pos_1.held_card.character_data
 		CharacterSelection.support_shinobi_2 = support_pos_2.held_card.character_data
-		print("[SELECTION_SCENE| Player characters set: " + str(CharacterSelection.active_shinobi))
-		print("[SELECTION_SCENE| Player characters set: " + str(CharacterSelection.support_shinobi_1))
-		print("[SELECTION_SCENE| Player characters set: " + str(CharacterSelection.support_shinobi_2))
+		Logger.info("SELECTION", "Player characters set: " + str(CharacterSelection.active_shinobi))
+		Logger.info("SELECTION", "Player characters set: " + str(CharacterSelection.support_shinobi_1))
+		Logger.info("SELECTION", "Player characters set: " + str(CharacterSelection.support_shinobi_2))
 		
 		# Generate opponent characters (avoid selecting the same as player)
 		var all_characters = character_db.get_all_characters()
@@ -205,19 +205,19 @@ func _on_continue_pressed():
 				var random_index = randi() % all_characters.size()
 				CharacterSelection.opponent_shinobi.append(all_characters[random_index])
 		
-		print("[SELECTION_SCENE| Battle starting with player characters: ", [CharacterSelection.active_shinobi,CharacterSelection.support_shinobi_1, CharacterSelection.support_shinobi_2],
-			" and opponent characters: ", CharacterSelection.opponent_shinobi)
+		Logger.info("SELECTION", "Battle starting with player characters: " + str([CharacterSelection.active_shinobi,CharacterSelection.support_shinobi_1, CharacterSelection.support_shinobi_2]) + 
+			" and opponent characters: " + str(CharacterSelection.opponent_shinobi))
 		
 		SfxManager.play_sfx("yo")
 		
 		# Change to battle scene
 		SceneManager.change_scene("res://scenes/battle/battle_scene.tscn")
 	else:
-		print("[SELECTION_SCENE| Not enough characters selected: " + str(selected_character_data.size()) + "/" + str(MAX_SELECTED_CARDS))
+		Logger.info("SELECTION", "Not enough characters selected: " + str(selected_character_data.size()) + "/" + str(MAX_SELECTED_CARDS))
 
 # Handle card clicked signal
 func _on_card_clicked(card):
-	print("[SELECTION_SCENE| Card clicked: " + card.get_character_name())
+	Logger.info("SELECTION", "Card clicked: " + card.get_character_name())
 	
 	# Logic for card selection has been simplified
 	# Cards are now selected by dragging to slots instead
@@ -235,8 +235,8 @@ func _connect_slot_signals():
 			slot.card_placed.connect(_debug_card_placed)
 			slot.card_removed.connect(_debug_card_removed)
 		else:
-			push_error("Slot does not have card_dropped signal!")
-			print("[SELECTION_SCENE| ERROR: Slot missing card_dropped signal: " + slot.name)
+			Logger.error("SELECTION", "Slot does not have card_dropped signal!")
+			Logger.error("SELECTION", "Slot missing card_dropped signal: " + slot.name)
 
 # Handle card dropped on a slot
 func _on_card_dropped_on_slot(slot, card):
@@ -273,31 +273,31 @@ func _on_card_dropped_on_slot(slot, card):
 func _update_selected_characters():
 	selected_characters.clear()
 	
-	print("[SELECTION_SCENE| Updating selected characters")
+	Logger.info("SELECTION", "Updating selected characters")
 	
 	for slot in [active_pos, support_pos_1, support_pos_2]:
 		var card = slot.get_card()
 		if card != null:
 			if card.is_in_group("cards") and "character_data" in card:
-				print("[SELECTION_SCENE| Adding to selection: " + card.get_character_name())
+				Logger.info("SELECTION", "Adding to selection: " + card.get_character_name())
 				selected_characters.append(card)
 			else:
 				if "character_data" not in card:
-					print("[SELECTION_SCENE| Card missing character_data: " + str(card))
+					Logger.info("SELECTION", "Card missing character_data: " + str(card))
 				else:
-					print("[SELECTION_SCENE| Card not in 'cards' group: " + str(card))
+					Logger.info("SELECTION", "Card not in 'cards' group: " + str(card))
 		else:
-			print("[SELECTION_SCENE| Slot has no card")
+			Logger.info("SELECTION", "Slot has no card")
 	
 	# Log the selection status
-	print("[SELECTION_SCENE| Current selection: " + str(selected_characters.size()) + "/" + str(MAX_SELECTED_CARDS))
+	Logger.info("SELECTION", "Current selection: " + str(selected_characters.size()) + "/" + str(MAX_SELECTED_CARDS))
 	
 	# Update the continue button
 	continue_button.disabled = selected_characters.size() < MAX_SELECTED_CARDS
 
 # Initialize all node references
 func initialize_nodes():
-	print("[SELECTION_SCENE| Initializing nodes")
+	Logger.info("SELECTION", "Initializing nodes")
 	
 	# Verify expected nodes
 	var nodes_to_check = [
@@ -311,28 +311,28 @@ func initialize_nodes():
 		var node_name = node_check[0]
 		var node = node_check[1]
 		if node == null:
-			push_error("MISSING NODE: " + node_name + " is null!")
-			print("[SELECTION_SCENE| ERROR: " + node_name + " is null!")
+			Logger.error("SELECTION", "MISSING NODE: " + node_name + " is null!")
+			Logger.error("SELECTION", node_name + " is null!")
 		else:
-			print("[SELECTION_SCENE| Found " + node_name + ": " + str(node.get_class()))
+			Logger.info("SELECTION", "Found " + node_name + ": " + str(node.get_class()))
 	
 	# Check scene assignment
 	if character_card_scene == null:
-		push_error("ERROR: character_card_scene is not assigned in the inspector!")
-		print("[SELECTION_SCENE| ERROR: character_card_scene is not assigned!")
+		Logger.error("SELECTION", "ERROR: character_card_scene is not assigned in the inspector!")
+		Logger.error("SELECTION", "character_card_scene is not assigned!")
 	else:
-		print("[SELECTION_SCENE| character_card_scene assigned: " + str(character_card_scene.resource_path))
+		Logger.info("SELECTION", "character_card_scene assigned: " + str(character_card_scene.resource_path))
 
 # Called when a card starts being dragged
 func _on_card_drag_started(card):
-	#print("[SELECTION_SCENE| Drag started for card: " + card.get_character_name() + "]")
+	#Logger.info("SELECTION", "Drag started for card: " + card.get_character_name() + "]")
 	card_being_dragged = card
 	
 	# Get all cards in the grid
 	var all_cards = get_tree().get_nodes_in_group("character")
 
 	#var all_cards = character_grid.get_children()
-	#print("[SELECTION_SCENE| Found " + str(all_cards.size()) + " cards in grid]")
+	#Logger.info("SELECTION", "Found " + str(all_cards.size()) + " cards in grid]")
 	
 	# Disable all cards except the one being dragged
 	if !card.is_preview:
@@ -341,21 +341,21 @@ func _on_card_drag_started(card):
 				other_card.disable_card()
 				#other_card.set_hover_detection(false)
 
-	print("[SELECTION_SCENE| Card drag started, disabled input and hover on other cards]")
+	Logger.info("SELECTION", "Card drag started, disabled input and hover on other cards")
 
 # Called when a card stops being dragged
 func _on_card_drag_ended(card):
-	print("[SELECTION_SCENE| Drag ended for card: " + card.get_character_name() + "]")
+	Logger.info("SELECTION", "Drag ended for card: " + card.get_character_name())
 	# Only proceed if this is the card we're tracking
 	if card_being_dragged != card:
-		print("[SELECTION_SCENE| Ignoring drag end for non-tracked card]")
+		Logger.info("SELECTION", "Ignoring drag end for non-tracked card")
 		return
 		
 	card_being_dragged = null
 	
 	# Get all cards in the grid
 	var all_cards = character_grid.get_children()
-	print("[SELECTION_SCENE| Found " + str(all_cards.size()) + " cards in grid]")
+	Logger.info("SELECTION", "Found " + str(all_cards.size()) + " cards in grid")
 	
 	# Re-enable all cards
 	for other_card in all_cards:
@@ -366,10 +366,10 @@ func _on_card_drag_ended(card):
 		
 		other_card.enable_card()
 		
-	print("[SELECTION_SCENE| Card drag ended, re-enabled input and hover on all cards]")
+	Logger.info("SELECTION", "Card drag ended, re-enabled input and hover on all cards")
 	
 func place_character_on_slot(card: CharacterCard, slot: CardSlot):
-	print("[SELECTION_SCENE] Placing " + card.character_data.name + " on slot " + str(slot))
+	Logger.info("SELECTION", "Placing " + card.character_data.name + " on slot " + str(slot))
 
 	# Create a new card instance
 	
@@ -391,7 +391,7 @@ func setup_character_selection():
 	populate_character_grid()
 
 func _debug_card_placed(slot, card):
-	print("[DEBUG][SLOT] card_placed on slot '%s' with card '%s'" % [slot.name, card.name])
+	Logger.info("SELECTION", "[DEBUG][SLOT] card_placed on slot '%s' with card '%s'" % [slot.name, card.name])
 
 func _debug_card_removed(slot):
-	print("[DEBUG][SLOT] card_removed on slot '%s'" % slot.name)
+	Logger.info("SELECTION", "[DEBUG][SLOT] card_removed on slot '%s'" % slot.name)

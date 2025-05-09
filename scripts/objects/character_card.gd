@@ -102,17 +102,17 @@ func _handle_mouse_release():
 	if current_state == CardState.CLICKED and click_timer.time_left > 0:
 		_handle_short_click()
 	elif current_state == CardState.DRAGGING:
-		print("[DRAG DEBUG] Mouse released while dragging | Card: " + get_character_name() + 
-			  " | Is Preview: " + str(is_preview))
+		Logger.info("DRAG", "Mouse released while dragging | Card: " + get_character_name() + 
+			  " | Is Preview: " + str(is_preview), Logger.DetailLevel.MEDIUM)
 		
 		# Check if we're over a card slot
 		var mouse_pos = get_viewport().get_mouse_position()
 		var nearest_slot = _find_nearest_card_slot(mouse_pos)
 		
 		if nearest_slot and _is_within_snap_distance(mouse_pos, nearest_slot):
-			print("[DRAG DEBUG] Card dropped on slot")
+			Logger.info("SLOT", "Card dropped on slot", Logger.DetailLevel.MEDIUM)
 			if nearest_slot.held_card != null:
-				print("SWITCH POSITIONS   !!!!")
+				Logger.info("SLOT", "Switch positions requested between cards", Logger.DetailLevel.MEDIUM)
 				if self != nearest_slot.held_card:
 					emit_signal("switch_requested", self, nearest_slot.held_card)
 			else:				
@@ -150,9 +150,9 @@ func _handle_mouse_release():
 		current_state = CardState.IDLE
 		is_dragging = false
 		if is_preview:
-			print("[DRAG DEBUG] Preview card drag ended")
+			Logger.info("DRAG", "Preview card drag ended", Logger.DetailLevel.MEDIUM)
 		else:
-			print("[DRAG DEBUG] Original card drag ended")
+			Logger.info("DRAG", "Original card drag ended", Logger.DetailLevel.MEDIUM)
 		
 		#emit_signal("drag_ended", self)
 		_apply_drag_visual_effects(false, self)
@@ -192,15 +192,16 @@ func _handle_double_click():
 		ZoomManager.show_card(character_data)
 
 func _start_drag_operation(card: CharacterCard):
-	print("[DRAG DEBUG] Starting drag operation | Card: " + card.get_character_name() + 
+	Logger.info("DRAG", "Starting drag operation | Card: " + card.get_character_name() + 
 		  " | Is Preview: " + str(card.is_preview) + 
-		  " | Scene: " + ("Selection" if scene_type == SceneType.SELECTION else "Battle"))
+		  " | Scene: " + ("Selection" if scene_type == SceneType.SELECTION else "Battle"), 
+		  Logger.DetailLevel.MEDIUM)
 	
 	SfxManager.play_sfx("drag")
 	if scene_type == SceneType.SELECTION and !card.is_preview:
 		# Get position based on scene type first
 		var mouse_pos = get_tree().current_scene.get_global_mouse_position()		
-		print("[DRAG DEBUG] Target position for drag: " + str(mouse_pos))
+		Logger.info("DRAG", "Target position for drag: " + str(mouse_pos), Logger.DetailLevel.LOW)
 		
 		# Create preview card
 		var preview = card.duplicate()
@@ -220,18 +221,18 @@ func _start_drag_operation(card: CharacterCard):
 		else:
 			preview.global_position = mouse_pos
 		
-		print("[DRAG DEBUG] Created preview card for " + card.get_character_name() + " | Position: " + str(mouse_pos))
+		Logger.info("DRAG", "Created preview card for " + card.get_character_name() + " | Position: " + str(mouse_pos), Logger.DetailLevel.MEDIUM)
 		
 		# Disable original card
 		card.disable_card()
-		print("[DRAG DEBUG] Disabled original card: " + card.get_character_name())
+		Logger.info("CARD_STATE", "Disabled original card: " + card.get_character_name(), Logger.DetailLevel.MEDIUM)
 		
 		# Start dragging preview
 		preview.is_dragging = true
 		preview.current_state = CardState.DRAGGING
 		emit_signal("drag_started", preview)
 		_apply_drag_visual_effects(true, preview)
-		print("[DRAG DEBUG] Started dragging preview card")
+		Logger.info("DRAG", "Started dragging preview card", Logger.DetailLevel.MEDIUM)
 		
 	else:
 		# For battle scene or preview cards
@@ -239,11 +240,12 @@ func _start_drag_operation(card: CharacterCard):
 		card.current_state = CardState.DRAGGING
 		emit_signal("drag_started", card)
 		_apply_drag_visual_effects(true, card)
-		print("[DRAG DEBUG] Started dragging card directly")
+		Logger.info("DRAG", "Started dragging card directly", Logger.DetailLevel.MEDIUM)
 
 func _setup_preview_card(preview: CharacterCard):
-	print("[DRAG DEBUG] Setting up preview card | Original: " + 
-		  (original_card_reference.get_character_name() if original_card_reference else "None"))
+	Logger.info("DRAG", "Setting up preview card | Original: " + 
+		  (original_card_reference.get_character_name() if original_card_reference else "None"), 
+		  Logger.DetailLevel.MEDIUM)
 	
 	# Initialize node references
 	preview.portrait = preview.get_node("RigidBody2D/CharacterVisuals/Portrait")
@@ -261,10 +263,10 @@ func _setup_preview_card(preview: CharacterCard):
 	# Setup card with original card's data
 	if is_preview:
 		preview.setup(original_card_reference.character_data)
-		print("[DRAG DEBUG] Setup preview with original card's data")
+		Logger.info("DRAG", "Setup preview with original card's data", Logger.DetailLevel.LOW)
 	else:
 		preview.setup(character_data)
-		print("[DRAG DEBUG] Setup preview with current card's data")
+		Logger.info("DRAG", "Setup preview with current card's data", Logger.DetailLevel.LOW)
 
 func _update_drag_position(position):
 	if current_state == CardState.DRAGGING:
@@ -277,8 +279,7 @@ func _update_drag_position(position):
 			# Check for nearby card slots
 			var nearest_slot = _find_nearest_card_slot(target_pos)
 			if nearest_slot and _is_within_snap_distance(target_pos, nearest_slot):
-				#target_pos = nearest_slot.global_position
-				print("[DRAG DEBUG] Highlighting slot : " + str(nearest_slot))
+				Logger.info("SLOT", "Highlighting slot: " + str(nearest_slot), Logger.DetailLevel.LOW)
 				# Highlight the slot
 				if nearest_slot.has_method("set_highlight"):
 					nearest_slot.set_highlight(true)
@@ -294,19 +295,21 @@ func _update_drag_position(position):
 		# Only update the rigid body position if it exists
 		if rigid_body:
 			rigid_body.global_position = target_pos
-			print("[DRAG DEBUG] Updated rigid body position: " + str(target_pos) + 
+			Logger.info("DRAG", "Updated rigid body position: " + str(target_pos) + 
 				  " | Card: " + get_character_name() + 
 				  " | Is Preview: " + str(is_preview) +
 				  " | Is Duplicate: " + str(is_duplicate) +
-				  " | Scene: " + ("Selection" if scene_type == SceneType.SELECTION else "Battle"))
+				  " | Scene: " + ("Selection" if scene_type == SceneType.SELECTION else "Battle"), 
+				  Logger.DetailLevel.LOW)
 		else:
 			# If no rigid body, update the card position directly
 			global_position = target_pos
-			print("[DRAG DEBUG] Updated card position: " + str(target_pos) + 
+			Logger.info("DRAG", "Updated card position: " + str(target_pos) + 
 				  " | Card: " + get_character_name() + 
 				  " | Is Preview: " + str(is_preview) +
 				  " | Is Duplicate: " + str(is_duplicate) +
-				  " | Scene: " + ("Selection" if scene_type == SceneType.SELECTION else "Battle"))
+				  " | Scene: " + ("Selection" if scene_type == SceneType.SELECTION else "Battle"), 
+				  Logger.DetailLevel.LOW)
 
 func _apply_drag_visual_effects(is_dragging: bool, card: CharacterCard):
 	if is_dragging:
@@ -433,14 +436,14 @@ func _is_within_snap_distance(position, slot):
 # Modify _end_drag_operation to handle slot snapping
 func _end_drag_operation():
 	if current_state == CardState.DRAGGING:
-		print("[DRAG DEBUG] Ending drag operation for card: " + get_character_name())
+		Logger.info("DRAG", "Ending drag operation for card: " + get_character_name(), Logger.DetailLevel.MEDIUM)
 		
 		# Check if we're over a card slot
 		var mouse_pos = get_viewport().get_mouse_position()
 		var nearest_slot = _find_nearest_card_slot(mouse_pos)
 		
 		if nearest_slot and _is_within_snap_distance(mouse_pos, nearest_slot):
-			print("[DRAG DEBUG] Card dropped on slot")
+			Logger.info("SLOT", "Card dropped on slot", Logger.DetailLevel.MEDIUM)
 			# Snap to slot position
 			if rigid_body:
 				rigid_body.global_position = nearest_slot.global_position
@@ -453,7 +456,7 @@ func _end_drag_operation():
 			queue_free()
 			return
 		else:
-			print("REPOSITIONING")
+			Logger.info("CARD_STATE", "Repositioning card to original slot", Logger.DetailLevel.MEDIUM)
 			if rigid_body:
 				rigid_body.global_position = current_slot.global_position
 			else:
@@ -471,8 +474,8 @@ func is_support_character() -> bool:
 		var battle_scene = get_tree().current_scene
 		var battle_path = SceneManager.current_scene_path
 
-		print(str(battle_scene))
-		print(str(battle_path))
+		Logger.info("CARD_STATE", "Battle scene: " + str(battle_scene), Logger.DetailLevel.LOW)
+		Logger.info("CARD_STATE", "Battle path: " + str(battle_path), Logger.DetailLevel.LOW)
 
 		if current_slot == battle_scene.player_slot_active:
 			return false

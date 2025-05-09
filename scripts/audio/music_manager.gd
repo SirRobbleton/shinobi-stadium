@@ -33,7 +33,7 @@ var track_sequence: Array = []
 var is_sequence_playing: bool = false
 
 func _ready():
-	print("MusicManager initializing...")
+	Logger.info("AUDIO", "MusicManager initializing...")
 	
 	# Create audio players
 	primary_player = AudioStreamPlayer.new()
@@ -61,13 +61,13 @@ func _ready():
 			# Handle track sequences
 			for track_path in path:
 				if !FileAccess.file_exists(track_path):
-					push_warning("Music file not found: " + track_path)
+					Logger.warning("AUDIO", "Music file not found: " + track_path)
 		else:
 			# Handle single tracks
 			if !FileAccess.file_exists(path):
-				push_warning("Music file not found: " + path)
+				Logger.warning("AUDIO", "Music file not found: " + path)
 	
-	print("MusicManager ready")
+	Logger.info("AUDIO", "MusicManager ready")
 
 # Play a track with crossfading
 func play_track(track_name: String):
@@ -83,20 +83,20 @@ func play_track(track_name: String):
 	
 	# Check if we have this track
 	if not tracks.has(track_name):
-		push_error("MusicManager: Track not found - " + track_name)
+		Logger.error("AUDIO", "Track not found - " + track_name)
 		return
 	
 	var path = tracks[track_name]
 	if !FileAccess.file_exists(path):
-		push_error("MusicManager: Music file doesn't exist - " + path)
+		Logger.error("AUDIO", "Music file doesn't exist - " + path)
 		return
 	
-	print("MusicManager: Playing track - " + track_name)
+	Logger.info("AUDIO", "Playing track - " + track_name)
 	
 	# Get the track to play
 	var stream = load(path)
 	if not stream:
-		push_error("MusicManager: Failed to load stream - " + path)
+		Logger.error("AUDIO", "Failed to load stream - " + path)
 		return
 	
 	# Determine which player to use next
@@ -121,7 +121,7 @@ func play_track(track_name: String):
 	current_track = track_name
 	current_player = next_player
 	
-	print("Music crossfading to: " + track_name)
+	Logger.info("AUDIO", "Music crossfading to: " + track_name)
 
 # Check if a specific track is currently playing
 func is_track_playing(track_name: String) -> bool:
@@ -154,16 +154,16 @@ func set_volume(vol: float):
 func play_track_instant(track_name: String):
 	# Check if we have this track
 	if not tracks.has(track_name):
-		push_error("MusicManager: Track not found - " + track_name)
+		Logger.error("AUDIO", "Track not found - " + track_name)
 		return
 		
 	var path = tracks[track_name]
 	
 	if !FileAccess.file_exists(path):
-		push_error("MusicManager: Music file doesn't exist - " + path)
+		Logger.error("AUDIO", "Music file doesn't exist - " + path)
 		return
 	
-	print("MusicManager: Playing track instantly - " + track_name)
+	Logger.info("AUDIO", "Playing track instantly - " + track_name)
 	
 	# Stop both players immediately
 	primary_player.stop()
@@ -180,20 +180,20 @@ func play_track_instant(track_name: String):
 		current_track = track_name
 		current_player = primary_player
 
-		print("Music started: " + track_name)
+		Logger.info("AUDIO", "Music started: " + track_name)
 	else:
-		push_error("MusicManager: Failed to load stream - " + path)
+		Logger.error("AUDIO", "Failed to load stream - " + path)
 
 # Add this new function to handle sequential playback
 func play_track_sequence(track_name: String):
 	# Check if we have this track sequence
 	if not tracks.has(track_name):
-		push_error("MusicManager: Track sequence not found - " + track_name)
+		Logger.error("AUDIO", "Track sequence not found - " + track_name)
 		return
 	
 	var sequence = tracks[track_name]
 	if not sequence is Array:
-		push_error("MusicManager: Track is not a sequence - " + track_name)
+		Logger.error("AUDIO", "Track is not a sequence - " + track_name)
 		return
 	
 	# Set up sequence
@@ -212,15 +212,15 @@ func _play_next_track_in_sequence():
 	
 	var path = track_sequence[current_track_index]
 	if !FileAccess.file_exists(path):
-		push_error("MusicManager: Music file doesn't exist - " + path)
+		Logger.error("AUDIO", "Music file doesn't exist - " + path)
 		return
 	
-	print("MusicManager: Playing track " + str(current_track_index + 1) + " of " + str(track_sequence.size()))
+	Logger.info("AUDIO", "Playing track " + str(current_track_index + 1) + " of " + str(track_sequence.size()))
 	
 	# Get the track to play
 	var stream = load(path)
 	if not stream:
-		push_error("MusicManager: Failed to load stream - " + path)
+		Logger.error("AUDIO", "Failed to load stream - " + path)
 		return
 	
 	# Determine which player to use next
@@ -246,7 +246,7 @@ func _play_next_track_in_sequence():
 	current_player = next_player
 	
 	# Connect to the finished signal to play next track
-	next_player.finished.connect(_on_track_finished, CONNECT_ONE_SHOT)
+	#next_player.finished.connect(_on_track_finished, CONNECT_ONE_SHOT)
 
 # Add this signal handler
 func _on_track_finished():

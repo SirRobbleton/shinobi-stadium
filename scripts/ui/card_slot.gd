@@ -21,25 +21,25 @@ func _on_body_exited(body):
 			body.valid_drop_zone = null
 
 func disable_collision():
-	print("[CARD_SLOT| Disabling collision for slot: " + name)
+	Logger.info("SLOT", "Disabling collision for slot: " + name)
 	$CollisionShape2D.disabled = true
 	input_pickable = false
 	# Keep slot visible
 	emit_signal("card_placed", self, held_card)
-	print("[CARD_SLOT| Collision disabled")
+	Logger.info("SLOT", "Collision disabled")
 
 func enable_collision():
 	if held_card == null:
-		print("[CARD_SLOT| Enabling collision for slot: " + name)
+		Logger.info("SLOT", "Enabling collision for slot: " + name)
 		$CollisionShape2D.disabled = false
 		input_pickable = true
 		# Keep slot visible
 		emit_signal("card_removed", self)
-		print("[CARD_SLOT| Collision enabled")
+		Logger.info("SLOT", "Collision enabled")
 
 # Set a card in this slot
 func set_card(card):
-	print("[CARD_SLOT| Setting card in slot: " + name)
+	Logger.info("SLOT", "Setting card in slot: " + name)
 	held_card = card
 	disable_collision()  # Disable collision when a card is set
 	emit_signal("card_dropped", self, card)  # Emit dropped signal
@@ -51,7 +51,7 @@ func get_card():
 
 # Clear the card from this slot
 func clear_card():
-	print("[CARD_SLOT| Clearing card from slot: " + name)
+	Logger.info("SLOT", "Clearing card from slot: " + name)
 	held_card = null
 	enable_collision()  # Re-enable collision when cleared
 	return true
@@ -70,4 +70,4 @@ func set_highlight(is_highlighted: bool):
 	
 	# Print debug information
 	if is_highlighted:
-		print("[CARD_SLOT| Highlighting slot: " + name)
+		Logger.info("SLOT", "Highlighting slot: " + name)

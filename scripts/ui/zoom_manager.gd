@@ -8,7 +8,7 @@ var zoom_overlay_instance = null
 # Show a card in the zoom overlay
 func show_card(character_data):
 	print("[ZOOM_MANAGER] Attempting to show card: " + str(character_data))
-	
+		
 	# Create or get the zoom overlay instance
 	if zoom_overlay_instance == null:
 		print("[ZOOM_MANAGER] Creating new zoom overlay instance")
@@ -30,6 +30,8 @@ func show_card(character_data):
 	if zoom_overlay_instance.has_method("show_card"):
 		print("[ZOOM_MANAGER] Calling show_card on overlay instance")
 		zoom_overlay_instance.show_card(character_data)
+		zoom_overlay_instance.z_index = 100
+
 	else:
 		push_error("[ZOOM_MANAGER] Zoom overlay instance does not have show_card method")
 

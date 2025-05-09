@@ -14,7 +14,7 @@ var sfx_library := {
 var sfx_player: AudioStreamPlayer
 
 func _ready():
-	print("SFXManager initializing...")
+	Logger.info("AUDIO", "SFXManager initializing...")
 	
 	# Create an AudioStreamPlayer for short SFX
 	sfx_player = AudioStreamPlayer.new()
@@ -25,19 +25,19 @@ func _ready():
 	for sfx_name in sfx_library:
 		var path = sfx_library[sfx_name]
 		if not FileAccess.file_exists(path):
-			push_warning("SFX file not found: " + path)
+			Logger.warning("AUDIO", "SFX file not found: " + path)
 	
-	print("SFXManager ready!")
+	Logger.info("AUDIO", "SFXManager ready!")
 
 func play_sfx(sfx_name: String):
 	# Check if we have this sfx
 	if not sfx_library.has(sfx_name):
-		push_error("SFXManager: Sound not found - " + sfx_name)
+		Logger.error("AUDIO", "Sound not found - " + sfx_name)
 		return
 
 	var path = sfx_library[sfx_name]
 	if not FileAccess.file_exists(path):
-		push_error("SFXManager: File doesn't exist - " + path)
+		Logger.error("AUDIO", "File doesn't exist - " + path)
 		return
 
 	var stream = load(path)
@@ -45,11 +45,11 @@ func play_sfx(sfx_name: String):
 		sfx_player.stream = stream
 		sfx_player.play()
 	else:
-		push_error("SFXManager: Failed to load stream - " + path)
+		Logger.error("AUDIO", "Failed to load stream - " + path)
 
 func play_random_sfx(sfx_list: Array):
 	if !sfx_list:
-		push_error("SFXManager: No SFX names provided to play_random_sfx.")
+		Logger.error("AUDIO", "No SFX names provided to play_random_sfx.")
 		return
 
 	# Filter only valid entries from the input
@@ -58,11 +58,11 @@ func play_random_sfx(sfx_list: Array):
 		if sfx_library.has(name) and FileAccess.file_exists(sfx_library[name]):
 			valid_sfx.append(name)
 		else:
-			push_warning("SFXManager: Skipping invalid or missing SFX - " + str(name))
+			Logger.warning("AUDIO", "Skipping invalid or missing SFX - " + str(name))
 
 	# If no valid tracks, abort
 	if !valid_sfx:
-		push_error("SFXManager: No valid SFX tracks found in list.")
+		Logger.error("AUDIO", "No valid SFX tracks found in list.")
 		return
 
 	# Pick one at random

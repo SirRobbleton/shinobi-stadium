@@ -14,7 +14,7 @@ signal drag_started(card)
 signal drag_ended(card)
 
 func setup(character_data):
-	print(script_name + "Setting up character: " + character_data.name)
+	Logger.info("UI", "Setting up character: " + character_data.name)
 	# clear old children
 	for child in vp.get_children():
 		child.queue_free()

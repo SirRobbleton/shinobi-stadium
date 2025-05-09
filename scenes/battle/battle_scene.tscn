@@ -1,9 +1,13 @@
-[gd_scene load_steps=6 format=3 uid="uid://ca68fibobexyt"]
+[gd_scene load_steps=10 format=3 uid="uid://ca68fibobexyt"]
 
 [ext_resource type="PackedScene" uid="uid://cc2ldxi27dh33" path="res://scenes/card_slot.tscn" id="1_3hov6"]
 [ext_resource type="Script" uid="uid://e2kmroxcrkib" path="res://scenes/battle/battle_scene.gd" id="1_6iigb"]
 [ext_resource type="PackedScene" uid="uid://bovi23yf8c4uk" path="res://scenes/objects/character_card.tscn" id="2_pu738"]
+[ext_resource type="Texture2D" uid="uid://cb1f7g8he3odu" path="res://assets/chakras/taijutsu.png" id="4_2wmvw"]
 [ext_resource type="Script" uid="uid://dj4201gpadn74" path="res://scripts/ui/battle_overlay.gd" id="4_ugm31"]
+[ext_resource type="Texture2D" uid="uid://do4y8yjhsh56" path="res://assets/chakras/ninjutsu.png" id="5_ww1p6"]
+[ext_resource type="Texture2D" uid="uid://vpdhw2bs2x0f" path="res://assets/chakras/bloodline.png" id="6_7hnyd"]
+[ext_resource type="Texture2D" uid="uid://b7ui0padryu38" path="res://assets/chakras/genjutsu.png" id="7_dddu7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ugm31"]
 size = Vector2(357, 391)
@@ -140,11 +144,14 @@ layout_mode = 2
 custom_minimum_size = Vector2(30, 60)
 layout_mode = 2
 size_flags_horizontal = 3
+texture = ExtResource("4_2wmvw")
 expand_mode = 3
 
 [node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/TaijutsuContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0.784314, 0, 1)
+theme_override_font_sizes/font_size = 24
 
 [node name="NinjutsuContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
 layout_mode = 2
@@ -153,11 +160,14 @@ layout_mode = 2
 custom_minimum_size = Vector2(30, 60)
 layout_mode = 2
 size_flags_horizontal = 3
+texture = ExtResource("5_ww1p6")
 expand_mode = 3
 
 [node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/NinjutsuContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.56115, 0.704473, 1, 1)
+theme_override_font_sizes/font_size = 24
 
 [node name="BloodlineContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
 layout_mode = 2
@@ -166,11 +176,14 @@ layout_mode = 2
 custom_minimum_size = Vector2(30, 60)
 layout_mode = 2
 size_flags_horizontal = 3
+texture = ExtResource("6_7hnyd")
 expand_mode = 3
 
 [node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/BloodlineContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.797665, 0.266004, 0.361086, 1)
+theme_override_font_sizes/font_size = 24
 
 [node name="GenjutsuContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
 layout_mode = 2
@@ -179,11 +192,13 @@ layout_mode = 2
 custom_minimum_size = Vector2(30, 60)
 layout_mode = 2
 size_flags_horizontal = 3
+texture = ExtResource("7_dddu7")
 expand_mode = 3
 
 [node name="Label" type="Label" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer/GenjutsuContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
 
 [node name="RandomContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
 visible = false
@@ -284,6 +299,7 @@ visible = false
 shape = SubResource("RectangleShape2D_ugm31")
 
 [node name="CenterContainer" type="CenterContainer" parent="BattleOverlay/OverlayLayout/PlayerFieldContainer"]
+z_index = 5
 layout_mode = 2
 size_flags_horizontal = 3
 

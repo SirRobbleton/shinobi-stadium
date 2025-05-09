@@ -21,10 +21,12 @@ buses/default_bus_layout="uid://coj6eo6foeykk"
 
 [autoload]
 
+Logger="*res://scripts/utils/logger.gd"
+AbilityDatabase="*res://scripts/data/ability_database.gd"
+CharacterDatabase="*res://scripts/data/character_database.gd"
 CharacterSelection="*res://scripts/gamestate/character_selection.gd"
 MusicManager="*res://scripts/audio/music_manager.gd"
 SceneManager="*res://scripts/gamestate/scene_manager.gd"
-CharacterDatabase="*res://scripts/data/character_database.gd"
 SfxManager="*res://scripts/audio/sfx_manager.gd"
 GamestateManager="*res://scripts/gamestate/gamestate_manager.gd"
 ZoomManager="*res://scripts/ui/zoom_manager.gd"

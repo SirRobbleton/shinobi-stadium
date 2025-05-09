@@ -9,7 +9,7 @@ signal card_dragged(card)
 signal card_dropped(card)
 
 func _ready():
-	print("[CARD_MANAGER] Initialized")
+	Logger.log_message("CARD", "Initialized")
 
 func register_card(card):
 	if card.is_in_group("cards"):
@@ -23,9 +23,9 @@ func register_card(card):
 		if card is CharacterCard:
 			card.connect("switch_requested", self, "_on_switch_requested")
 			
-		print("[CARD_MANAGER] Card registered: ", card.name)
+		Logger.log_message("CARD", "Card registered: " + card.name)
 	else:
-		print("[CARD_MANAGER] Attempted to register non-card object")
+		Logger.log_message("CARD", "Attempted to register non-card object")
 
 func unregister_card(card):
 	if card in active_cards:
@@ -41,7 +41,7 @@ func unregister_card(card):
 		if card is CharacterCard and card.is_connected("switch_requested", self, "_on_switch_requested"):
 			card.disconnect("switch_requested", self, "_on_switch_requested")
 		
-		print("[CARD_MANAGER] Card unregistered: ", card.name)
+		Logger.log_message("CARD", "Card unregistered: " + card.name)
 
 func _on_card_dragged(card):
 	emit_signal("card_dragged", card)
@@ -61,7 +61,7 @@ func _on_card_dropped(card):
 			target_card.set_targetable(false)
 
 func _on_switch_requested(source_card, target_card):
-	print("[CARD_MANAGER] Switch requested from ", source_card.name, " to ", target_card.name)
+	Logger.log_message("CARD", "Switch requested from " + source_card.name + " to " + target_card.name)
 	
 	# Request the switch through the GamestateManager
 	if GamestateManager.perform_switch(source_card, target_card):
@@ -88,4 +88,4 @@ func _swap_card_positions(source_card, target_card):
 	source_card.animate_to_position(target_pos)
 	target_card.animate_to_position(source_pos)
 	
-	print("[CARD_MANAGER] Swapped positions of ", source_card.name, " and ", target_card.name)
+	Logger.log_message("CARD", "Swapped positions of " + source_card.name + " and " + target_card.name)

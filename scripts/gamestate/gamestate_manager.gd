@@ -31,108 +31,108 @@ var opponent_shinobi = []
 var attack_in_progress = false  # Track when an attack is currently happening
 
 func _ready():
-	print("[GAMESTATE_MANAGER| Initialized")
+	Logger.info("GAMESTATE", "Initialized")
 
 func change_turn():
 	current_player = "player" if current_player == "opponent" else "opponent"
-	print("[GAMESTATE_MANAGER| Turn changed to: " + current_player)
+	Logger.info("GAMESTATE", "Turn changed to: " + current_player)
 	
 	# Reset switching state for the new turn - make sure these are always reset
 	has_switched_this_turn = false
 	in_battle_phase = false
-	print("[GAMESTATE_MANAGER| Reset turn state: has_switched_this_turn = false, in_battle_phase = false")
+	Logger.info("GAMESTATE", "Reset turn state: has_switched_this_turn = false, in_battle_phase = false")
 	
 	emit_signal("turn_changed", current_player)
 
 # This is just a placeholder for future functionality
 func start_battle():
-	print("[GAMESTATE_MANAGER| Starting battle")
+	Logger.info("GAMESTATE", "Starting battle")
 	current_player = "player"
 	has_switched_this_turn = false
 	in_battle_phase = false
 	emit_signal("turn_changed", current_player)
 
 func perform_switch(source_card, target_card) -> bool:
-	print("[GAMESTATE_MANAGER] Checking if switch is allowed...")
-	print("[GAMESTATE_MANAGER] Current player: " + current_player)
-	print("[GAMESTATE_MANAGER] Has switched this turn: " + str(has_switched_this_turn))
-	print("[GAMESTATE_MANAGER] In battle phase: " + str(in_battle_phase))
+	Logger.log_message("GAMESTATE", "Checking if switch is allowed...")
+	Logger.log_message("GAMESTATE", "Current player: " + current_player)
+	Logger.log_message("GAMESTATE", "Has switched this turn: " + str(has_switched_this_turn))
+	Logger.log_message("GAMESTATE", "In battle phase: " + str(in_battle_phase))
 	
 	if current_player == "player" and !has_switched_this_turn and !in_battle_phase:
-		print("[GAMESTATE_MANAGER] Approving switch: " + source_card.character_data.name + " <-> " + target_card.character_data.name)
+		Logger.log_message("GAMESTATE", "Approving switch: " + source_card.character_data.name + " <-> " + target_card.character_data.name)
 		has_switched_this_turn = true
 		
 		# Emit signal immediately to trigger the UI update
 		emit_signal("switch_performed", source_card, target_card)
-		print("[GAMESTATE_MANAGER] Emitted switch_performed signal")
+		Logger.log_message("GAMESTATE", "Emitted switch_performed signal")
 		return true
 	else:
-		print("[GAMESTATE_MANAGER] Rejecting switch - not player's turn ("+current_player+"), already switched ("+str(has_switched_this_turn)+"), or in battle phase ("+str(in_battle_phase)+")")
+		Logger.log_message("GAMESTATE", "Rejecting switch - not player's turn ("+current_player+"), already switched ("+str(has_switched_this_turn)+"), or in battle phase ("+str(in_battle_phase)+")")
 		return false
 
 func enter_battle_phase():
-	print("[GAMESTATE_MANAGER| Entering battle phase")
+	Logger.log_message("GAMESTATE", "Entering battle phase")
 	in_battle_phase = true
 
 # Begin an attack from a character
 func begin_attack(character):
-	print("[GAMESTATE_MANAGER] Beginning attack from: " + character.name)
+	Logger.log_message("GAMESTATE", "Beginning attack from: " + character.name)
 	
 	# Ensure we have a reference to the battle overlay
 	var battle_scene = get_tree().current_scene
 	var battle_overlay = battle_scene.get_node_or_null("BattleOverlay")
 	
 	if !battle_overlay:
-		print("[GAMESTATE_MANAGER] Error: Battle overlay not found!")
+		Logger.log_message("GAMESTATE", "Error: Battle overlay not found!")
 		return
 	
 	# Highlight valid targets for attack
 	if battle_overlay.has_method("show_highlighted_targets"):
 		battle_overlay.show_highlighted_targets()
 	
-	print("[GAMESTATE_MANAGER] Attack setup complete - waiting for target selection")
+	Logger.log_message("GAMESTATE", "Attack setup complete - waiting for target selection")
 
 # Process the actual attack once target is selected
 func perform_attack(attacker_data: CharacterData, target_data: CharacterData):
-	print("[ATTACK_DEBUG] ========== ATTACK EXECUTION START ==========")
-	print("[ATTACK_DEBUG] Attacker: " + attacker_data.name + ", Target: " + target_data.name)
+	Logger.log_message("ATTACK", "========== ATTACK EXECUTION START ==========")
+	Logger.log_message("ATTACK", "Attacker: " + attacker_data.name + ", Target: " + target_data.name)
 	
 	# Find the attacker and target character cards
 	var attacker_card = null
 	var target_character = null
 	var character_cards = get_tree().get_nodes_in_group("character")
 	
-	print("[ATTACK_DEBUG] Searching through " + str(character_cards.size()) + " character cards")
+	Logger.log_message("ATTACK", "Searching through " + str(character_cards.size()) + " character cards")
 	
 	for card in character_cards:
 		# Log card details for debugging
 		if card.character_data == attacker_data:
 			attacker_card = card
-			print("[ATTACK_DEBUG] Found attacker card: " + card.name + " at position " + str(card.global_position))
+			Logger.log_message("ATTACK", "Found attacker card: " + card.name + " at position " + str(card.global_position))
 			if card.has_meta("slot_reference"):
 				var slot = card.get_meta("slot_reference")
-				print("[ATTACK_DEBUG] Attacker slot position: " + str(slot.global_position))
+				Logger.log_message("ATTACK", "Attacker slot position: " + str(slot.global_position))
 			else:
-				print("[ATTACK_DEBUG] WARNING: Attacker has no slot_reference meta!")
+				Logger.log_message("ATTACK", "WARNING: Attacker has no slot_reference meta!")
 				
 		if card.character_data == target_data:
 			target_character = card
-			print("[ATTACK_DEBUG] Found target card: " + card.name + " at position " + str(card.global_position))
+			Logger.log_message("ATTACK", "Found target card: " + card.name + " at position " + str(card.global_position))
 			if card.has_meta("slot_reference"):
 				var slot = card.get_meta("slot_reference")
-				print("[ATTACK_DEBUG] Target slot position: " + str(slot.global_position))
+				Logger.log_message("ATTACK", "Target slot position: " + str(slot.global_position))
 			else:
-				print("[ATTACK_DEBUG] WARNING: Target has no slot_reference meta!")
+				Logger.log_message("ATTACK", "WARNING: Target has no slot_reference meta!")
 	
 	if !attacker_card:
-		print("[ATTACK_DEBUG] ERROR: Could not find attacker card in scene!")
+		Logger.log_message("ATTACK", "ERROR: Could not find attacker card in scene!")
 	
 	if !target_character:
-		print("[ATTACK_DEBUG] ERROR: Could not find target character card in scene!")
+		Logger.log_message("ATTACK", "ERROR: Could not find target character card in scene!")
 		return false
 	
 	# Log pre-attack health
-	print("[ATTACK_DEBUG] Target pre-attack health: " + str(target_data.current_hp) + "/" + str(target_data.hp))
+	Logger.log_message("ATTACK", "Target pre-attack health: " + str(target_data.current_hp) + "/" + str(target_data.hp))
 	
 	# Determine damage based on position (support or main)
 	var damage_amount = 30 # Fallback default
@@ -143,40 +143,40 @@ func perform_attack(attacker_data: CharacterData, target_data: CharacterData):
 			# Use support attack damage
 			damage_amount = attacker_data.support_jutsu_damage
 			attack_name = attacker_data.main_jutsu_name if attacker_data.main_jutsu_name else "Support Attack"
-			print("[ATTACK_DEBUG] Using SUPPORT attack: " + attack_name + " with damage: " + str(damage_amount))
+			Logger.log_message("ATTACK", "Using SUPPORT attack: " + attack_name + " with damage: " + str(damage_amount))
 		else:
 			# Use main attack damage
 			damage_amount = attacker_data.main_jutsu_damage
 			attack_name = attacker_data.main_jutsu_name
-			print("[ATTACK_DEBUG] Using MAIN attack: " + attack_name + " with damage: " + str(damage_amount))
+			Logger.log_message("ATTACK", "Using MAIN attack: " + attack_name + " with damage: " + str(damage_amount))
 	else:
-		print("[ATTACK_DEBUG] WARNING: Using default damage value due to missing attacker card")
+		Logger.log_message("ATTACK", "WARNING: Using default damage value due to missing attacker card")
 	
-	print("[ATTACK_DEBUG] Applying " + str(damage_amount) + " damage using " + attack_name)
+	Logger.log_message("ATTACK", "Applying " + str(damage_amount) + " damage using " + attack_name)
 	var is_defeated = target_data.take_damage(damage_amount)
 	
 	# Log post-attack health
-	print("[ATTACK_DEBUG] Target post-attack health: " + str(target_data.current_hp) + "/" + str(target_data.hp))
+	Logger.log_message("ATTACK", "Target post-attack health: " + str(target_data.current_hp) + "/" + str(target_data.hp))
 	
 	# Update character visuals if we found the character object
 	if target_character:
 		var hp_label = target_character.get_node("RigidBody2D/CharacterVisuals/Portrait/HPColor/HPLabel")
 		if hp_label:
-			print("[ATTACK_DEBUG] Updating HP label from: " + hp_label.text + " to: " + str(target_data.current_hp))
+			Logger.log_message("ATTACK", "Updating HP label from: " + hp_label.text + " to: " + str(target_data.current_hp))
 			hp_label.text = str(target_data.current_hp)
 		else:
-			print("[ATTACK_DEBUG] ERROR: Could not find HP label on character card")
+			Logger.log_message("ATTACK", "ERROR: Could not find HP label on character card")
 		
 		# Create floating damage number
 		show_damage_number(target_character, damage_amount)
 	else:
-		print("[ATTACK_DEBUG] ERROR: Could not find target character card in character group")
+		Logger.log_message("ATTACK", "ERROR: Could not find target character card in character group")
 	
 	# Emit signal with defeat information
 	emit_signal("attack_performed", attacker_data, target_data, is_defeated)
-	print("[ATTACK_DEBUG] Signal 'attack_performed' emitted. Defeated: " + str(is_defeated))
+	Logger.log_message("ATTACK", "Signal 'attack_performed' emitted. Defeated: " + str(is_defeated))
 	
-	print("[ATTACK_DEBUG] ========== ATTACK EXECUTION COMPLETE ==========")
+	Logger.log_message("ATTACK", "========== ATTACK EXECUTION COMPLETE ==========")
 	return is_defeated
 
 # Show floating damage number for visual feedback
@@ -217,7 +217,7 @@ func show_battle_overlay(character: CharacterCard) -> void:
 			battle_overlay = current_scene.get_node("BattleOverlay")
 	
 	if battle_overlay:
-		print("[GAMESTATE_MANAGER] Showing battle overlay for character: " + character.character_data.name)
+		Logger.log_message("GAMESTATE", "Showing battle overlay for character: " + character.character_data.name)
 		battle_overlay.show_character(character)
 		#battle_overlay.visible = true
 
@@ -227,31 +227,31 @@ func is_in_battle_scene() -> bool:
 
 func hide_battle_overlay(after_attack: bool = false) -> void:
 	if battle_overlay:
-		print("[GAMESTATE_MANAGER] Hiding battle overlay, after_attack: " + str(after_attack))
+		Logger.log_message("GAMESTATE", "Hiding battle overlay, after_attack: " + str(after_attack))
 		
 		if after_attack and battle_overlay.has_method("clear_after_attack"):
 			# Use the special method for cleanup after attack
 			battle_overlay.clear_after_attack()
-			print("[GAMESTATE_MANAGER] After_attack: " + str(after_attack))
+			Logger.log_message("GAMESTATE", "After_attack: " + str(after_attack))
 
 		else:
 			# For normal hiding (not after attack), we still need to restore the card
 			if battle_overlay.has_method("_restore_displayed_card"):
 				battle_overlay._restore_displayed_card()
 			
-			print("[GAMESTATE_MANAGER] Remove before: " + str(battle_overlay.current_character.character_data.name))
+			Logger.log_message("GAMESTATE", "Remove before: " + str(battle_overlay.current_character.character_data.name))
 			battle_overlay.current_character.get_parent().remove_child(battle_overlay.current_character)
 			battle_overlay.current_character.current_slot.get_parent().add_child(battle_overlay.current_character)
 			
-			print("GS DISPLAY POSITION BEFORE: " + str(battle_overlay.current_character.position))
-			print("GS DISPLAY POSITION GLOBAL BEFORE: " + str(battle_overlay.current_character.global_position))
+			Logger.log_message("GAMESTATE", "GS DISPLAY POSITION BEFORE: " + str(battle_overlay.current_character.position))
+			Logger.log_message("GAMESTATE", "GS DISPLAY POSITION GLOBAL BEFORE: " + str(battle_overlay.current_character.global_position))
 			battle_overlay.current_character.position = battle_overlay.current_character.current_slot.position
-			print("GS DISPLAY POSITION AFTER: " + str(battle_overlay.current_character.position))
-			print("GS DISPLAY GLOBAL AFTER: " + str(battle_overlay.current_character.global_position))
-			print("GS CARD SLOT GLOBAL AFTER: " + str(battle_overlay.current_character.current_slot.global_position))
-			print("GS CARD SLOT POSITION AFTER: " + str(battle_overlay.current_character.current_slot.position))
+			Logger.log_message("GAMESTATE", "GS DISPLAY POSITION AFTER: " + str(battle_overlay.current_character.position))
+			Logger.log_message("GAMESTATE", "GS DISPLAY GLOBAL AFTER: " + str(battle_overlay.current_character.global_position))
+			Logger.log_message("GAMESTATE", "GS CARD SLOT GLOBAL AFTER: " + str(battle_overlay.current_character.current_slot.global_position))
+			Logger.log_message("GAMESTATE", "GS CARD SLOT POSITION AFTER: " + str(battle_overlay.current_character.current_slot.position))
 				
-			print("[GAMESTATE_MANAGER] Remove : " + str(battle_overlay.current_character.character_data.name))
+			Logger.log_message("GAMESTATE", "GS REMOVE : " + str(battle_overlay.current_character.character_data.name))
 
 			# Re-enable all character cards
 			var character_cards = get_tree().get_nodes_in_group("character")
@@ -265,7 +265,7 @@ func hide_battle_overlay(after_attack: bool = false) -> void:
 		# Clear any target highlights in the battle scene
 		var current_scene = get_tree().current_scene
 		if is_in_battle_scene() and current_scene.has_method("clear_highlights"):
-			print("[GAMESTATE_MANAGER] Clearing target highlights in battle scene")
+			Logger.log_message("GAMESTATE", "Clearing target highlights in battle scene")
 			current_scene.clear_highlights()
 
 # Generate a unique attack ID

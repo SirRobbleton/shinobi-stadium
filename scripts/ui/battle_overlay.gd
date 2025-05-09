@@ -21,18 +21,18 @@ func _ready():
 	visible = false
 	
 	# Set up z-index values for proper layering
-	z_index = 10
-	z_as_relative = false
+	#z_index = 10
+	#z_as_relative = false
 	
 	# Set overlay color as background (lowest z-index)
 	if overlay_color:
-		overlay_color.z_index = 0
-		overlay_color.z_as_relative = false
+		#overlay_color.z_index = 0
+		overlay_color.z_as_relative = true
 	
 	# Set card and action containers above the overlay color
 	if card_container:
-		card_container.z_index = 1
-		card_container.z_as_relative = false
+		#card_container.z_index = 1
+		card_container.z_as_relative = true
 		
 	# Enable input processing
 	set_process_input(true)
@@ -364,9 +364,9 @@ func _on_button_released(button):
 
 # Handle attack button press
 func _on_attack_button_pressed():
-	print("[BATTLE_OVERLAY] Attack button pressed")
+	Logger.info("BATTLE", "Attack button pressed")
 	if current_character:
-		print("[BATTLE_OVERLAY] Initiating attack with: " + current_character.character_data.name)
+		Logger.info("BATTLE", "Initiating attack with: " + current_character.character_data.name)
 		GamestateManager.begin_attack(current_character.character_data)
 		
 		# Show valid targets for this attack
@@ -374,15 +374,15 @@ func _on_attack_button_pressed():
 
 # Handle ability button press
 func _on_ability_button_pressed():
-	print("[BATTLE_OVERLAY] Ability button pressed")
+	Logger.info("BATTLE", "Ability button pressed")
 	if current_character:
-		print("[BATTLE_OVERLAY] Activating ability for: " + current_character.character_data.name)
+		Logger.info("BATTLE", "Activating ability for: " + current_character.character_data.name)
 		# This will be implemented later
 		pass
 
 # Disable all battle cards (cards in play)
 func clear_after_attack():
-	print("[BATTLE_OVERLAY] Clearing overlay after attack completion")
+	Logger.info("BATTLE", "Clearing overlay after attack completion")
 	
 	# Clean up the displayed card
 	if displayed_card:
@@ -391,7 +391,7 @@ func clear_after_attack():
 	
 	# Re-enable all character cards
 	var overlay_character_cards = get_tree().get_nodes_in_group("character")
-	print("[BATTLE_OVERLAY] Re-enabling " + str(overlay_character_cards.size()) + " character cards")
+	Logger.info("BATTLE", "Re-enabling " + str(overlay_character_cards.size()) + " character cards")
 	
 	for card in overlay_character_cards:
 		if card.has_method("enable_card"):
@@ -403,6 +403,10 @@ func clear_after_attack():
 func _input(event):
 	if !visible:
 		return
+		
+	if ZoomManager.zoom_overlay_instance != null:
+		if ZoomManager.zoom_overlay_instance.visible:
+			return
 		
 	if event is InputEventMouseButton and event.pressed:
 		# Get the mouse position in screen coordinates
@@ -422,16 +426,16 @@ func _input(event):
 					var rect = Rect2(-size/2, size)
 					
 					if rect.has_point(local_pos):
-						print("[BATTLE_OVERLAY] Click detected on highlighted target: " + card.character_data.name)
+						Logger.info("BATTLE", "Click detected on highlighted target: " + card.character_data.name)
 						clicked_on_target = true
 						
 						# Check if we need to get the attacker's attack ID
 						if current_character and current_character.character_data.has_meta("current_attack_id"):
 							var attack_id = current_character.character_data.get_meta("current_attack_id")
-							print("[BATTLE_OVERLAY] Found attack ID " + str(attack_id) + " for current attack")
+							Logger.info("BATTLE", "Found attack ID " + str(attack_id) + " for current attack")
 						
 						# Allow event to pass through to battle scene to handle the attack
-						print("[BATTLE_OVERLAY] Allowing battle scene to handle the target click")
+						Logger.info("BATTLE", "Allowing battle scene to handle the target click")
 						return
 		
 		# If we clicked on a target, don't process further
@@ -451,11 +455,11 @@ func _input(event):
 			# Check if mouse click is within this rect
 			if overlay_rect.has_point(mouse_pos):
 				clicked_in_overlay = true
-				print("[BATTLE_OVERLAY] Click detected within PlayerFieldContainer, keeping overlay open")
+				Logger.info("BATTLE", "Click detected within PlayerFieldContainer, keeping overlay open")
 		
 		# If click was outside the overlay container and not on a target, hide the overlay
 		if !clicked_in_overlay:
-			print("[BATTLE_OVERLAY] Click outside overlay detected, hiding")
+			Logger.info("BATTLE", "Click outside overlay detected, hiding")
 			GamestateManager.hide_battle_overlay(false)
 			get_viewport().set_input_as_handled()
 			return
@@ -463,21 +467,21 @@ func _input(event):
 func show_character(character: CharacterCard) -> void:
 	var character_data = character.character_data
 	current_character = character
-	print("[BATTLE_OVERLAY] Showing character: " + character_data.name)
+	Logger.info("BATTLE", "Showing character: " + character_data.name)
 	
 	# Make sure we're visible and on top
 	visible = true
-	z_index = 10
-	z_as_relative = true
+	#z_index = 5
+	#z_as_relative = true
 	#character.z_index = 10
 	
 	# Ensure proper layering when showing
 	if overlay_color:
-		overlay_color.z_index = 0
-		overlay_color.z_as_relative = false
+		#overlay_color.z_index = 0
+		overlay_color.z_as_relative = true
 	if card_container:
-		card_container.z_index = 2  # Place above overlay color
-		card_container.z_as_relative = false
+		#card_container.z_index = 2  # Place above overlay color
+		card_container.z_as_relative = true
 	
 	# Find the original battle card to reference its properties
 	var is_support = false
@@ -493,28 +497,61 @@ func show_character(character: CharacterCard) -> void:
 	if attack_button and character_data:
 		var attack_name = ""
 		var attack_damage = 0
+		var damage_display = ""
 		
 		if is_support:
-			# Use support attack values but show the actual attack name
-			attack_name = character_data.main_jutsu_name  # Use main attack name instead of "Support Attack"
-			attack_damage = character_data.support_jutsu_damage
-			print("[BATTLE_OVERLAY] Card is in support position, using support damage")
+			# Support position using support damage
+			if character_data.attack_data != null:
+				attack_name = character_data.attack_data.name
+				attack_damage = character_data.attack_data.get_damage_value(true) # Get support damage
+				
+				# Display multiple values if present
+				var dmg_val = character_data.attack_data.support_damage
+				if typeof(dmg_val) == TYPE_ARRAY and dmg_val.size() > 1:
+					damage_display = str(dmg_val[0])
+					for i in range(1, dmg_val.size()):
+						damage_display += "/" + str(dmg_val[i])
+				else:
+					damage_display = str(attack_damage)
+			else:
+				attack_name = character_data.main_jutsu_name
+				attack_damage = character_data.attack_data.support_damage
+				damage_display = str(attack_damage)
+				
+			Logger.info("BATTLE", "Support card damage value: " + str(attack_damage))
 		else:
-			# Use main attack values
-			attack_name = character_data.main_jutsu_name
-			attack_damage = character_data.main_jutsu_damage
-			print("[BATTLE_OVERLAY] Card is in main position, using main damage")
-		
-		attack_button.text = attack_name + "\n" + str(attack_damage) + " DMG"
-		print("[BATTLE_OVERLAY] Set attack button text to: " + attack_button.text)
+			# Main position using attack damage
+			if character_data.attack_data != null:
+				attack_name = character_data.attack_data.name
+				attack_damage = character_data.attack_data.get_damage_value(false) # Get main damage
+				
+				# Display multiple values if present
+				var dmg_val = character_data.attack_data.damage
+				if typeof(dmg_val) == TYPE_ARRAY and dmg_val.size() > 1:
+					damage_display = str(dmg_val[0])
+					for i in range(1, dmg_val.size()):
+						damage_display += "/" + str(dmg_val[i])
+				else:
+					damage_display = str(attack_damage)
+			else:
+				attack_name = character_data.main_jutsu_name
+				attack_damage = character_data.main_jutsu_damage
+				damage_display = str(attack_damage)
+
+		# Set the button text with formatted damage display
+		attack_button.text = attack_name + "\n" + damage_display + " DMG"
+		Logger.info("BATTLE", "Set attack button text to: " + attack_button.text)
 	
 	if ability_button and character_data:
-		ability_button.text = character_data.ability
-		print("[BATTLE_OVERLAY] Set ability button text to: " + ability_button.text)
+		if current_character.character_data.ability_data != null:
+			ability_button.text = current_character.character_data.ability_data.name
+		else:
+			ability_button.text = character_data.ability
+		Logger.info("BATTLE", "Set ability button text to: " + ability_button.text)
 	
 	# Disable all battle cards (cards in play)
 	var scene_character_cards = get_tree().get_nodes_in_group("character")
-	print("[BATTLE_OVERLAY] Found " + str(scene_character_cards.size()) + " character cards")
+	Logger.info("BATTLE", "Found " + str(scene_character_cards.size()) + " character cards")
 	
 	for card in scene_character_cards:
 		if !card.is_preview:
@@ -523,7 +560,7 @@ func show_character(character: CharacterCard) -> void:
 	
 	# Clear any existing card
 	if displayed_card:
-		print("[BATTLE_OVERLAY] Clearing existing displayed card")
+		Logger.info("BATTLE", "Clearing existing displayed card")
 		#displayed_card.get_parent().remove_child(displayed_card)
 		displayed_card = null
 	
@@ -531,33 +568,33 @@ func show_character(character: CharacterCard) -> void:
 	#var card_scene = load("res://scenes/objects/character_card.tscn")
 	#displayed_card = card_scene.instantiate()
 	displayed_card = character
-	print("[BATTLE_OVERLAY] Created new card instance: " + str(displayed_card))
+	Logger.info("BATTLE", "Created new card instance: " + str(displayed_card))
 	
 	# Setup the card with character data
 	if displayed_card.has_method("setup"):
 		#displayed_card.setup(character_data)
-		#print("[BATTLE_OVERLAY] Setup card with character data")
+		#Logger.info("BATTLE", "Setup card with character data")
 		displayed_card = character
 		# Copy player ownership from the original card
 		#if original_card:
 		#	displayed_card.player_owned = original_card.player_owned
-		#	print("[BATTLE_OVERLAY] Set player_owned to: " + str(displayed_card.player_owned))
+		#	Logger.info("BATTLE", "Set player_owned to: " + str(displayed_card.player_owned))
 		# Add to the card slot
 		displayed_card.get_parent().remove_child(displayed_card)
 		card_slot.get_parent().add_child(displayed_card)
-		print("[BATTLE_OVERLAY] Added card to slot")
+		Logger.info("BATTLE", "Added card to slot")
 		# Scale the card
 		displayed_card.scale = Vector2(2.0, 2.0)		
 		# Center the card in the slot
 		
-		print("DISPLAY POSITION BEFORE: " + str(displayed_card.position))
-		print("DISPLAY POSITION GLOBAL BEFORE: " + str(displayed_card.global_position))
+		Logger.info("BATTLE", "DISPLAY POSITION BEFORE: " + str(displayed_card.position))
+		Logger.info("BATTLE", "DISPLAY POSITION GLOBAL BEFORE: " + str(displayed_card.global_position))
 
 		displayed_card.position = card_slot.position
-		print("DISPLAY POSITION AFTER: " + str(displayed_card.position))
-		print("DISPLAY GLOBAL AFTER: " + str(displayed_card.global_position))
-		print("CARD SLOT GLOBAL AFTER: " + str(card_slot.global_position))
-		print("CARD SLOT POSITION AFTER: " + str(card_slot.position))
+		Logger.info("BATTLE", "DISPLAY POSITION AFTER: " + str(displayed_card.position))
+		Logger.info("BATTLE", "DISPLAY GLOBAL AFTER: " + str(displayed_card.global_position))
+		Logger.info("BATTLE", "CARD SLOT GLOBAL AFTER: " + str(card_slot.global_position))
+		Logger.info("BATTLE", "CARD SLOT POSITION AFTER: " + str(card_slot.position))
 
 		 #Freeze the card to prevent physics interactions
 		if displayed_card.has_method("set_freeze"):
@@ -575,15 +612,15 @@ func show_character(character: CharacterCard) -> void:
 			displayed_card.enable_card()
 		displayed_card.modulate = Color(1, 1, 1, 1)  # Reset modulation
 			
-		print("[BATTLE_OVERLAY] Created and displayed card for: " + character_data.name)
-		print("[BATTLE_OVERLAY] Card state - is_disabled: " + str(displayed_card.is_disabled) + 
+		Logger.info("BATTLE", "Created and displayed card for: " + character_data.name)
+		Logger.info("BATTLE", "Card state - is_disabled: " + str(displayed_card.is_disabled) + 
 			" | modulate: " + str(displayed_card.modulate))
 	else:
-		push_error("Card instance does not have setup method!")
+		Logger.error("BATTLE", "Card instance does not have setup method!")
 
 # Show character and highlight valid targets
 func show_highlighted_targets():
-	print("[BATTLE_OVERLAY] Highlighting valid targets for: " + current_character.character_data.name)
+	Logger.info("BATTLE", "Highlighting valid targets for: " + current_character.character_data.name)
 	
 	# Get all opponent characters
 	var all_characters = get_tree().get_nodes_in_group("character")
@@ -596,7 +633,7 @@ func show_highlighted_targets():
 			
 			# Skip if character is on the same side as the attacker
 			if displayed_card && character.player_owned == displayed_card.player_owned:
-				print("[BATTLE_OVERLAY] Skipping " + character.get_character_name() + " - same side as attacker (player_owned: " + str(character.player_owned) + ")")
+				Logger.info("BATTLE", "Skipping " + character.get_character_name() + " - same side as attacker (player_owned: " + str(character.player_owned) + ")")
 				continue
 				
 			# Skip if character is already defeated
@@ -607,7 +644,7 @@ func show_highlighted_targets():
 			
 	# Check if we found any valid targets
 	if opponent_characters.size() == 0:
-		print("[BATTLE_OVERLAY] No valid targets found!")
+		Logger.info("BATTLE", "No valid targets found!")
 		# Just leave the overlay open, showing only the attacker's card
 		return
 		
@@ -626,5 +663,5 @@ func show_highlighted_targets():
 		if target.has_node("RigidBody2D"):
 			target.get_node("RigidBody2D").input_pickable = true
 		
-		print("[BATTLE_OVERLAY] Highlighted target: " + target.character_data.name)
+		Logger.info("BATTLE", "Highlighted target: " + target.character_data.name)
 		
