@@ -5,7 +5,7 @@ signal scene_changing(from_scene, to_scene)
 signal scene_changed(current_scene)
 
 # Scene skipping flags
-var skip_selection: bool = true  # Set to true to skip selection scene
+var skip_selection: bool = false  # Set to true to skip selection scene
 
 # Active scene tracking
 var current_scene_path: String = ""

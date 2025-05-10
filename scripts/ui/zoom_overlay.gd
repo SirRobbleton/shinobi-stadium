@@ -77,7 +77,7 @@ func show_card(character_data):
 		# Scale to a larger size (3.5x)
 		zoomed_card.scale = Vector2(3.5, 3.5)
 		zoomed_card.z_index = 100
-		
+		zoomed_card.disable_input()
 		# If card has RigidBody2D functionality, freeze it
 		if zoomed_card.has_method("set_freeze"):
 			zoomed_card.set_freeze(true)

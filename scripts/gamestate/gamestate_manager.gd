@@ -90,6 +90,9 @@ func begin_attack(character):
 	if battle_overlay.has_method("show_highlighted_targets"):
 		battle_overlay.show_highlighted_targets()
 	
+	Logger.info("BATTLE", "Hiding overlay after attack")
+	hide_battle_overlay(true)
+		
 	Logger.log_message("GAMESTATE", "Attack setup complete - waiting for target selection")
 
 # Process the actual attack once target is selected
@@ -225,48 +228,29 @@ func is_in_battle_scene() -> bool:
 	var scene_manager = get_node_or_null("/root/SceneManager")
 	return scene_manager and scene_manager.is_in_battle_scene()
 
-func hide_battle_overlay(after_attack: bool = false) -> void:
-	if battle_overlay:
-		Logger.log_message("GAMESTATE", "Hiding battle overlay, after_attack: " + str(after_attack))
-		
-		if after_attack and battle_overlay.has_method("clear_after_attack"):
-			# Use the special method for cleanup after attack
-			battle_overlay.clear_after_attack()
-			Logger.log_message("GAMESTATE", "After_attack: " + str(after_attack))
-
-		else:
-			# For normal hiding (not after attack), we still need to restore the card
-			if battle_overlay.has_method("_restore_displayed_card"):
-				battle_overlay._restore_displayed_card()
-			
-			Logger.log_message("GAMESTATE", "Remove before: " + str(battle_overlay.current_character.character_data.name))
-			battle_overlay.current_character.get_parent().remove_child(battle_overlay.current_character)
-			battle_overlay.current_character.current_slot.get_parent().add_child(battle_overlay.current_character)
-			
-			Logger.log_message("GAMESTATE", "GS DISPLAY POSITION BEFORE: " + str(battle_overlay.current_character.position))
-			Logger.log_message("GAMESTATE", "GS DISPLAY POSITION GLOBAL BEFORE: " + str(battle_overlay.current_character.global_position))
-			battle_overlay.current_character.position = battle_overlay.current_character.current_slot.position
-			Logger.log_message("GAMESTATE", "GS DISPLAY POSITION AFTER: " + str(battle_overlay.current_character.position))
-			Logger.log_message("GAMESTATE", "GS DISPLAY GLOBAL AFTER: " + str(battle_overlay.current_character.global_position))
-			Logger.log_message("GAMESTATE", "GS CARD SLOT GLOBAL AFTER: " + str(battle_overlay.current_character.current_slot.global_position))
-			Logger.log_message("GAMESTATE", "GS CARD SLOT POSITION AFTER: " + str(battle_overlay.current_character.current_slot.position))
-				
-			Logger.log_message("GAMESTATE", "GS REMOVE : " + str(battle_overlay.current_character.character_data.name))
-
-			# Re-enable all character cards
-			var character_cards = get_tree().get_nodes_in_group("character")
-			for card in character_cards:
-				if card.has_method("enable_card"):
-					card.enable_card()
-
-			# Standard way of hiding
-			battle_overlay.visible = false
-		
-		# Clear any target highlights in the battle scene
-		var current_scene = get_tree().current_scene
-		if is_in_battle_scene() and current_scene.has_method("clear_highlights"):
-			Logger.log_message("GAMESTATE", "Clearing target highlights in battle scene")
-			current_scene.clear_highlights()
+func hide_battle_overlay(after_attack: bool = false):
+	Logger.log_message("GAMESTATE", "Hiding battle overlay (after_attack=" + str(after_attack) + ")")
+	
+	# Find the BattleOverlay in the current scene
+	var current_scene = get_tree().current_scene
+	var battle_overlay = current_scene.get_node_or_null("BattleOverlay")
+	
+	if !battle_overlay:
+		Logger.log_message("GAMESTATE", "No BattleOverlay found in current scene to hide")
+		return
+	
+	# Always use unified clear_overlay logic
+	if battle_overlay.has_method("clear_overlay"):
+		battle_overlay.clear_overlay()
+		Logger.log_message("GAMESTATE", "Called clear_overlay on battle overlay")
+	else:
+		Logger.log_message("GAMESTATE", "ERROR: BattleOverlay doesn't have clear_overlay method!")
+		battle_overlay.visible = false
+	
+	# Clear any target highlights in the battle scene
+	if is_in_battle_scene() and current_scene.has_method("clear_highlights"):
+		Logger.log_message("GAMESTATE", "Clearing target highlights in battle scene")
+		current_scene.clear_highlights()
 
 # Generate a unique attack ID
 func _generate_attack_id(attacker_name):

@@ -166,29 +166,6 @@ func highlight_character(character):
 	if character.has_method("set_targetable"):
 		character.set_targetable(true)
 		Logger.info("HIGHLIGHT_DEBUG", "Set as targetable using property")
-		
-	# Create target panel for targeting UI if it doesn't exist
-	if !character.has_node("RigidBody2D/CharacterVisuals/Portrait/TargetPanel"):
-		Logger.warning("HIGHLIGHT_DEBUG", "ERROR: CharacterVisuals not found, could not add TargetPanel")
-	else:
-		var target_panel = character.get_node("RigidBody2D/CharacterVisuals/Portrait/TargetPanel")
-		target_panel.visible = true
-		Logger.info("HIGHLIGHT_DEBUG", "Made existing TargetPanel visible")
-	
-	# Set the BacklightPanel color for hover effect (but don't make it visible yet)
-	#var backlight = character.get_node_or_null("RigidBody2D/CharacterVisuals/Portrait/BacklightPanel")
-	#if backlight:
-	#	backlight.modulate = Color(1.0, 0.3, 0.3, 0.7)  # Red tint for hover over targetable cards
-	#	print("[HIGHLIGHT_DEBUG] Set BacklightPanel color for hover effect")
-	#else:
-	#	print("[HIGHLIGHT_DEBUG] WARNING: BacklightPanel not found")
-	
-	# Enable hover detection
-	if character.has_method("set_hover_detection"):
-		character.set_hover_detection(true)
-		Logger.info("HIGHLIGHT_DEBUG", "Enabled hover detection")
-	else:
-		Logger.warning("HIGHLIGHT_DEBUG", "WARNING: No set_hover_detection method available")
 	
 	# Make sure RigidBody2D is pickable
 	if character.has_node("RigidBody2D"):
@@ -204,13 +181,6 @@ func highlight_character(character):
 			Logger.info("HIGHLIGHT_DEBUG", "Already connected to target_clicked signal")
 	else:
 		Logger.warning("HIGHLIGHT_DEBUG", "WARNING: target_clicked signal not available")
-	
-	# Create pulsating scale effect for target
-	var scale_tween = create_tween()
-	scale_tween.set_loops()
-	scale_tween.tween_property(character, "scale", character.scale * 1.1, 2.0)
-	scale_tween.tween_property(character, "scale", character.scale, 0.5)
-	Logger.info("HIGHLIGHT_DEBUG", "Created pulsating scale effect")
 	
 	Logger.info("HIGHLIGHT_DEBUG", "Character highlighted successfully")
 
@@ -229,16 +199,6 @@ func clear_highlights():
 		# Set targetable to false if method exists
 		if card.has_method("set_targetable"):
 			card.set_targetable(false)
-		
-		# Hide target panel if it exists
-		var target_panel = card.get_node_or_null("RigidBody2D/CharacterVisuals/TargetPanel")
-		if target_panel:
-			target_panel.visible = false
-		
-		# Stop any running tweens (scale effects)
-		if card.scale != Vector2(1,1):
-			var reset_tween = create_tween()
-			reset_tween.tween_property(card, "scale", Vector2(1,1), 0.2)
 		
 		# Disconnect target_clicked signal
 		if card.has_signal("target_clicked") and card.is_connected("target_clicked", Callable(self, "_on_target_clicked")):
@@ -322,8 +282,8 @@ func process_attack(character):
 	Logger.info("CLICK_DEBUG", "Processing attack: " + attacker_data.name + " -> " + target_data.name)
 	
 	# Perform the attack
-	var result = GamestateManager.perform_attack(attacker_data, target_data)
-	Logger.info("CLICK_DEBUG", "Attack result: " + str(result))
+	var is_defeated = GamestateManager.perform_attack(attacker_data, target_data)
+	Logger.info("CLICK_DEBUG", "Attack result: " + str(is_defeated))
 	
 	# Hide the battle overlay after attack
 	GamestateManager.hide_battle_overlay(true)

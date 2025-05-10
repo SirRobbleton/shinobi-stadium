@@ -15,6 +15,7 @@ var attack_fill_circle: ColorRect
 var ability_fill_circle: ColorRect
 
 var displayed_card = null
+var original_card: CharacterCard = null
 
 func _ready():
 	# Start hidden
@@ -363,42 +364,39 @@ func _on_button_released(button):
 	scale_tween.tween_property(button, "scale", Vector2(1, 1), 0.2)
 
 # Handle attack button press
-func _on_attack_button_pressed():
-	Logger.info("BATTLE", "Attack button pressed")
-	if current_character:
-		Logger.info("BATTLE", "Initiating attack with: " + current_character.character_data.name)
-		GamestateManager.begin_attack(current_character.character_data)
-		
-		# Show valid targets for this attack
-		#show_highlighted_targets()
+func _on_attack_button_pressed() -> void:
+	Logger.info("BATTLE", "Attack button pressed, closing overlay.")
+	clear_overlay()
+	# Optionally, emit a signal or call GamestateManager if needed
 
 # Handle ability button press
-func _on_ability_button_pressed():
-	Logger.info("BATTLE", "Ability button pressed")
-	if current_character:
-		Logger.info("BATTLE", "Activating ability for: " + current_character.character_data.name)
+func _on_ability_button_pressed() -> void:
+	Logger.info("BATTLE", "Activating ability for: " + str(displayed_card.character_data.name))
+	Logger.info("BATTLE", "Ability button pressed, closing overlay.")
+	clear_overlay()
 		# This will be implemented later
-		pass
+		#pass
 
-# Disable all battle cards (cards in play)
-func clear_after_attack():
-	Logger.info("BATTLE", "Clearing overlay after attack completion")
-	
-	# Clean up the displayed card
-	if displayed_card:
-		displayed_card.queue_free()
-		displayed_card = null
-	
+# Add new clear_overlay method
+func clear_overlay():
+	Logger.info("BATTLE", "Clearing overlay (unified logic)")
+	_restore_original_card()
 	# Re-enable all character cards
 	var overlay_character_cards = get_tree().get_nodes_in_group("character")
 	Logger.info("BATTLE", "Re-enabling " + str(overlay_character_cards.size()) + " character cards")
-	
 	for card in overlay_character_cards:
 		if card.has_method("enable_card"):
 			card.enable_card()
-	
 	# Hide the overlay
 	visible = false
+
+# Update clear_after_attack to call clear_overlay
+func clear_after_attack():
+	Logger.info("BATTLE", "Clearing overlay after attack completion (calls clear_overlay)")
+	clear_overlay()
+
+# Ensure overlay is always cleared the same way
+# (GamestateManager and button handlers should call clear_overlay instead of setting visible=false directly)
 
 func _input(event):
 	if !visible:
@@ -462,161 +460,101 @@ func _input(event):
 			Logger.info("BATTLE", "Click outside overlay detected, hiding")
 			GamestateManager.hide_battle_overlay(false)
 			get_viewport().set_input_as_handled()
+			# Don't try to return a value from this path
 			return
 
-func show_character(character: CharacterCard) -> void:
-	var character_data = character.character_data
-	current_character = character
-	Logger.info("BATTLE", "Showing character: " + character_data.name)
-	
-	# Make sure we're visible and on top
-	visible = true
-	#z_index = 5
-	#z_as_relative = true
-	#character.z_index = 10
-	
-	# Ensure proper layering when showing
-	if overlay_color:
-		#overlay_color.z_index = 0
-		overlay_color.z_as_relative = true
-	if card_container:
-		#card_container.z_index = 2  # Place above overlay color
-		card_container.z_as_relative = true
-	
-	# Find the original battle card to reference its properties
-	var is_support = false
-	var original_card = null
-	var all_character_cards = get_tree().get_nodes_in_group("character")
-	for card in all_character_cards:
-		if card.character_data == character_data:
-			is_support = card.is_support_character()
-			original_card = card
-			break
-	
-	# Update button text with character attack and ability information
-	if attack_button and character_data:
-		var attack_name = ""
-		var attack_damage = 0
-		var damage_display = ""
-		
-		if is_support:
-			# Support position using support damage
-			if character_data.attack_data != null:
-				attack_name = character_data.attack_data.name
-				attack_damage = character_data.attack_data.get_damage_value(true) # Get support damage
-				
-				# Display multiple values if present
-				var dmg_val = character_data.attack_data.support_damage
-				if typeof(dmg_val) == TYPE_ARRAY and dmg_val.size() > 1:
-					damage_display = str(dmg_val[0])
-					for i in range(1, dmg_val.size()):
-						damage_display += "/" + str(dmg_val[i])
-				else:
-					damage_display = str(attack_damage)
-			else:
-				attack_name = character_data.main_jutsu_name
-				attack_damage = character_data.attack_data.support_damage
-				damage_display = str(attack_damage)
-				
-			Logger.info("BATTLE", "Support card damage value: " + str(attack_damage))
-		else:
-			# Main position using attack damage
-			if character_data.attack_data != null:
-				attack_name = character_data.attack_data.name
-				attack_damage = character_data.attack_data.get_damage_value(false) # Get main damage
-				
-				# Display multiple values if present
-				var dmg_val = character_data.attack_data.damage
-				if typeof(dmg_val) == TYPE_ARRAY and dmg_val.size() > 1:
-					damage_display = str(dmg_val[0])
-					for i in range(1, dmg_val.size()):
-						damage_display += "/" + str(dmg_val[i])
-				else:
-					damage_display = str(attack_damage)
-			else:
-				attack_name = character_data.main_jutsu_name
-				attack_damage = character_data.main_jutsu_damage
-				damage_display = str(attack_damage)
+# Handle normal hiding (when clicked outside) or after an attack
+func _on_visibility_changed():
+	if !visible:
+		_restore_original_card()
 
-		# Set the button text with formatted damage display
-		attack_button.text = attack_name + "\n" + damage_display + " DMG"
-		Logger.info("BATTLE", "Set attack button text to: " + attack_button.text)
-	
-	if ability_button and character_data:
-		if current_character.character_data.ability_data != null:
-			ability_button.text = current_character.character_data.ability_data.name
-		else:
-			ability_button.text = character_data.ability
-		Logger.info("BATTLE", "Set ability button text to: " + ability_button.text)
-	
-	# Disable all battle cards (cards in play)
-	var scene_character_cards = get_tree().get_nodes_in_group("character")
-	Logger.info("BATTLE", "Found " + str(scene_character_cards.size()) + " character cards")
-	
-	for card in scene_character_cards:
-		if !card.is_preview:
-			if card.has_method("disable_card"):
-				card.disable_card()
-	
-	# Clear any existing card
+# This function will be called when the overlay is hidden, whether after an attack or through a regular click
+func _restore_original_card():
 	if displayed_card:
-		Logger.info("BATTLE", "Clearing existing displayed card")
-		#displayed_card.get_parent().remove_child(displayed_card)
+		displayed_card.queue_free()
 		displayed_card = null
 	
-	# Create a duplicate of the card
-	#var card_scene = load("res://scenes/objects/character_card.tscn")
-	#displayed_card = card_scene.instantiate()
-	displayed_card = character
-	Logger.info("BATTLE", "Created new card instance: " + str(displayed_card))
+	if original_card:
+		original_card.visible = true
+		original_card.set_process_input(true)
+		if original_card.has_node("RigidBody2D"):
+			original_card.get_node("RigidBody2D").freeze = true
+		original_card = null
+
+func show_character(character: CharacterCard) -> void:
+	# Restore any previous card first
+	if displayed_card:
+		_restore_original_card()
 	
-	# Setup the card with character data
-	if displayed_card.has_method("setup"):
-		#displayed_card.setup(character_data)
-		#Logger.info("BATTLE", "Setup card with character data")
-		displayed_card = character
-		# Copy player ownership from the original card
-		#if original_card:
-		#	displayed_card.player_owned = original_card.player_owned
-		#	Logger.info("BATTLE", "Set player_owned to: " + str(displayed_card.player_owned))
-		# Add to the card slot
-		displayed_card.get_parent().remove_child(displayed_card)
-		card_slot.get_parent().add_child(displayed_card)
-		Logger.info("BATTLE", "Added card to slot")
-		# Scale the card
-		displayed_card.scale = Vector2(2.0, 2.0)		
-		# Center the card in the slot
-		
-		Logger.info("BATTLE", "DISPLAY POSITION BEFORE: " + str(displayed_card.position))
-		Logger.info("BATTLE", "DISPLAY POSITION GLOBAL BEFORE: " + str(displayed_card.global_position))
-
-		displayed_card.position = card_slot.position
-		Logger.info("BATTLE", "DISPLAY POSITION AFTER: " + str(displayed_card.position))
-		Logger.info("BATTLE", "DISPLAY GLOBAL AFTER: " + str(displayed_card.global_position))
-		Logger.info("BATTLE", "CARD SLOT GLOBAL AFTER: " + str(card_slot.global_position))
-		Logger.info("BATTLE", "CARD SLOT POSITION AFTER: " + str(card_slot.position))
-
-		 #Freeze the card to prevent physics interactions
-		if displayed_card.has_method("set_freeze"):
-			displayed_card.set_freeze(true)
-		elif displayed_card.has_node("RigidBody2D"):
-			displayed_card.get_node("RigidBody2D").freeze = true
-			
-		#Disable input on the card
-		displayed_card.set_process_input(false)
-		if displayed_card.has_node("RigidBody2D"):
-			displayed_card.get_node("RigidBody2D").input_pickable = false
-			
-		#Ensure the card is not disabled or modulated
-		if displayed_card.has_method("enable_card"):
-			displayed_card.enable_card()
-		displayed_card.modulate = Color(1, 1, 1, 1)  # Reset modulation
-			
-		Logger.info("BATTLE", "Created and displayed card for: " + character_data.name)
-		Logger.info("BATTLE", "Card state - is_disabled: " + str(displayed_card.is_disabled) + 
-			" | modulate: " + str(displayed_card.modulate))
+	original_card = character
+	# Hide and disable the original card while overlay is open
+	if original_card:
+		original_card.set_process_input(false)
+		original_card.visible = false
+		if original_card.has_node("RigidBody2D"):
+			original_card.get_node("RigidBody2D").freeze = true
+	
+	# Create a duplicate for display
+	var card_clone = character.duplicate()
+	card_clone.scale = Vector2(2.0, 2.0)
+	card_clone.position = Vector2.ZERO # Center of Control
+	card_clone.visible = true
+	card_clone.modulate.a = 1.0
+	
+	# Ensure physics is frozen on the clone
+	if card_clone.has_node("RigidBody2D"):
+		card_clone.get_node("RigidBody2D").freeze = true
+		card_clone.get_node("RigidBody2D").input_pickable = false
+	
+	# Add to overlay Control node (parent of CardSlot)
+	var slot_control = card_slot.get_parent()
+	slot_control.add_child(card_clone)
+	displayed_card = card_clone
+	displayed_card.setup(character.character_data)
+	Logger.info("BATTLE", "Displayed clone for: " + character.character_data.name)
+	
+	# Update attack and ability button labels based on character data
+	var character_data = character.character_data
+	var is_support_pos = false
+	if character.has_method("is_support_character"):
+		is_support_pos = character.is_support_character()
+	var attack_name = ""
+	var damage_display = ""
+	if character_data.attack_data != null:
+		attack_name = character_data.attack_data.name
+		var dmg_val = 0
+		if is_support_pos:
+			dmg_val = character_data.attack_data.support_damage
+		else:
+			dmg_val = character_data.attack_data.damage
+		if typeof(dmg_val) == TYPE_ARRAY and dmg_val.size() > 1:
+			damage_display = str(dmg_val[0])
+			for i in range(1, dmg_val.size()):
+				damage_display += "/" + str(dmg_val[i])
+		else:
+			damage_display = str(dmg_val)
 	else:
-		Logger.error("BATTLE", "Card instance does not have setup method!")
+		attack_name = character_data.main_jutsu_name
+		if is_support_pos:
+			damage_display = str(character_data.support_jutsu_damage)
+		else:
+			damage_display = str(character_data.main_jutsu_damage)
+	if attack_button:
+		attack_button.text = attack_name + "\n" + damage_display + " DMG"
+	if ability_button:
+		ability_button.text = character_data.ability_data.name if character_data.ability_data != null else character_data.ability
+	
+	# Disable all other battle cards while overlay is open
+	var scene_cards = get_tree().get_nodes_in_group("character")
+	for c in scene_cards:
+		if !c.is_preview and c != original_card:
+			if c.has_method("disable_card"):
+				c.disable_card()
+	
+	# Ensure overlay is visible and on top
+	visible = true
+	if !is_connected("visibility_changed", Callable(self, "_on_visibility_changed")):
+		connect("visibility_changed", Callable(self, "_on_visibility_changed"))
 
 # Show character and highlight valid targets
 func show_highlighted_targets():
@@ -624,7 +562,7 @@ func show_highlighted_targets():
 	
 	# Get all opponent characters
 	var all_characters = get_tree().get_nodes_in_group("character")
-	var opponent_characters = []
+	var target_characters = []
 	
 	# Filter for opponent characters
 	for character in all_characters:
@@ -640,24 +578,18 @@ func show_highlighted_targets():
 			if char_data.current_hp <= 0:
 				continue
 				
-			opponent_characters.append(character)
+			target_characters.append(character)
 			
 	# Check if we found any valid targets
-	if opponent_characters.size() == 0:
+	if target_characters.size() == 0:
 		Logger.info("BATTLE", "No valid targets found!")
 		# Just leave the overlay open, showing only the attacker's card
 		return
 		
 	# Ask battle scene to highlight all valid targets
 	var battle_scene = get_tree().current_scene
-	for target in opponent_characters:
+	for target in target_characters:
 		battle_scene.highlight_character(target)
-		
-		# Ensure target's backlight is visible
-		if target.has_node("RigidBody2D/CharacterVisuals/Portrait/BacklightPanel"):
-			var backlight = target.get_node("RigidBody2D/CharacterVisuals/Portrait/BacklightPanel")
-			backlight.modulate = Color(1.0, 0.3, 0.3, 0.7)  # Red tint for targetable cards
-			backlight.visible = true
 		
 		# Make sure it's input_pickable for targeting
 		if target.has_node("RigidBody2D"):

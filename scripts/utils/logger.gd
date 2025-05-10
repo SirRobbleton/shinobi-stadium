@@ -52,8 +52,13 @@ var log_categories_level2 = {
 # Logger Implementation
 # ==============================================
 
+# Helper function to get current time as formatted string
+func get_timestamp() -> String:
+	var datetime = Time.get_datetime_dict_from_system()
+	return "%02d:%02d:%02d" % [datetime.hour, datetime.minute, datetime.second]
+
 func _ready():
-	print("Logger initialized - Master switch: " + str(logging_enabled) + 
+	print("[" + get_timestamp() + "] Logger initialized - Master switch: " + str(logging_enabled) + 
 		  ", Detail level: " + detail_level_to_string(current_detail_level))
 
 # Helper to convert detail level to string
@@ -78,8 +83,8 @@ func log_message(category: String, message, level: int = DetailLevel.MEDIUM) -> 
 	if !is_detail_level_enabled(level):
 		return
 	
-	# Format the message with category prefix
-	var formatted_message = "[" + category + "] " + str(message)
+	# Format the message with timestamp and category prefix
+	var formatted_message = "[" + get_timestamp() + "] [" + category + "] " + str(message)
 	
 	# Just use Godot's standard print function
 	print(formatted_message)
@@ -116,13 +121,13 @@ func warning(category: String, message, level: int = DetailLevel.MEDIUM) -> void
 func set_detail_level(level: int, enabled: bool) -> void:
 	if detail_level_enabled.has(level):
 		detail_level_enabled[level] = enabled
-		print("Detail level " + detail_level_to_string(level) + " set to: " + str(enabled))
+		print("[" + get_timestamp() + "] Detail level " + detail_level_to_string(level) + " set to: " + str(enabled))
 
 # Utility function to enable/disable a specific category
 func set_category_enabled(category: String, enabled: bool) -> void:
 	if log_categories.has(category):
 		log_categories[category] = enabled
-		print("Category " + category + " set to: " + str(enabled))
+		print("[" + get_timestamp() + "] Category " + category + " set to: " + str(enabled))
 	elif log_categories_level2.has(category):
 		log_categories_level2[category] = enabled
-		print("Category " + category + " set to: " + str(enabled)) 
+		print("[" + get_timestamp() + "] Category " + category + " set to: " + str(enabled)) 
