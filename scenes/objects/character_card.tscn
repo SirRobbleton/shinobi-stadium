@@ -51,11 +51,11 @@ offset_right = 83.0
 offset_bottom = 118.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(0.997926, 1.00516)
 mouse_filter = 0
 mouse_default_cursor_shape = 2
 expand_mode = 1
 stretch_mode = 6
-metadata/_edit_use_anchors_ = true
 
 [node name="HPColor" type="ColorRect" parent="RigidBody2D/CharacterVisuals/Portrait"]
 custom_minimum_size = Vector2(60, 30)
@@ -143,7 +143,5 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_hsjs0")
 
 [node name="PressTimer" type="Timer" parent="."]
 
-[connection signal="mouse_entered" from="RigidBody2D" to="." method="_on_mouse_entered"]
-[connection signal="mouse_exited" from="RigidBody2D" to="." method="_on_mouse_exited"]
 [connection signal="mouse_entered" from="RigidBody2D/CharacterVisuals/Portrait" to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="RigidBody2D/CharacterVisuals/Portrait" to="." method="_on_mouse_exited"]

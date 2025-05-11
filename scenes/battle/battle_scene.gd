@@ -389,7 +389,13 @@ func place_character_on_slot(card: CharacterCard, slot: CardSlot):
 	
 	# Mark the slot as occupied
 	slot.held_card = card
-	#slot.disable_collision()
+	# Freeze physics and disable collision so card stays static in battle
+	if card.rigid_body:
+		card.rigid_body.freeze = true
+		card.rigid_body.linear_velocity = Vector2.ZERO
+		card.rigid_body.angular_velocity = 0
+	if card.has_node("RigidBody2D/CollisionShape2D"):
+		card.get_node("RigidBody2D/CollisionShape2D").disabled = true
 	
 	Logger.info("BATTLE_SCENE", "Placed " + card.character_data.name + " on a battle slot")
 	

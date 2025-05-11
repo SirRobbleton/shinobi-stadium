@@ -69,6 +69,10 @@ var float_bob_speed: float = 1.5
 var float_bob_amount: float = 5.0
 var float_time: float = 0.0
 
+# Add these new static variables
+static var DRAG_Z_INDEX: int = 15
+static var DEFAULT_Z_INDEX: int = 5
+
 func _ready():
 	# Initialize scene type
 	scene_type = SceneType.SELECTION if is_in_selection_scene() else SceneType.BATTLE
@@ -284,6 +288,16 @@ func _handle_mouse_release():
 		
 		if nearest_slot and _is_within_snap_distance(mouse_pos, nearest_slot):
 			Logger.info("SLOT", "Card dropped on slot", Logger.DetailLevel.MEDIUM)
+			# Reset physics and disable collision so the card stays static in slot
+			if rigid_body:
+				rigid_body.freeze = true
+				rigid_body.linear_velocity = Vector2.ZERO
+				rigid_body.angular_velocity = 0
+			if collision_shape:
+				collision_shape.disabled = true
+			Logger.info("PHYSICS", "Card physics reset after drop: " + get_character_name(), Logger.DetailLevel.LOW)
+			# Reset z-index after drop
+			z_index = DEFAULT_Z_INDEX
 			if nearest_slot.held_card != null:
 				Logger.info("SLOT", "Switch positions requested between cards", Logger.DetailLevel.MEDIUM)
 				if self != nearest_slot.held_card:
@@ -293,7 +307,6 @@ func _handle_mouse_release():
 					CharacterSelection.emit_signal("place_character_on_slot", self, nearest_slot)
 				else:
 					emit_signal("place_character_on_slot", self, nearest_slot)
-
 
 			# Snap to slot position
 			if rigid_body:
@@ -310,8 +323,10 @@ func _handle_mouse_release():
 			# Notify slot that card was dropped (pass both slot and card)
 			# nearest_slot.emit_signal("card_dropped", nearest_slot, self)
 		elif is_duplicate:
+			# Cleanup preview: re-enable original and free duplicate
 			SfxManager.play_sfx("pop")
-			original_card_reference.enable_card()
+			if original_card_reference:
+				original_card_reference.enable_card()
 			queue_free()
 			return
 		else:
@@ -327,7 +342,8 @@ func _handle_mouse_release():
 		else:
 			Logger.info("DRAG", "Original card drag ended", Logger.DetailLevel.MEDIUM)
 		
-		#emit_signal("drag_ended", self)
+		# Reset z-index after end of drag
+		z_index = DEFAULT_Z_INDEX
 		_apply_drag_visual_effects(false, self)
 	
 	current_state = CardState.IDLE
@@ -386,6 +402,8 @@ func _start_drag_operation(card: CharacterCard):
 		card.rigid_body.linear_velocity = Vector2.ZERO
 		card.rigid_body.angular_velocity = 0
 		Logger.info("PHYSICS", "Set rigid body freeze=false (dragging) for card: " + card.get_character_name(), Logger.DetailLevel.LOW)
+	# Bring dragged card to front layer
+	card.z_index = DRAG_Z_INDEX
 	
 	Logger.info("DRAG", "Starting drag operation | Card: " + card.get_character_name() + 
 		  " | Is Preview: " + str(card.is_preview) + 
@@ -403,7 +421,6 @@ func _start_drag_operation(card: CharacterCard):
 		preview.is_preview = true
 		preview.is_duplicate = true
 		preview.original_card_reference = card
-		
 		# Setup preview card
 		_setup_preview_card(preview)
 		
@@ -427,8 +444,8 @@ func _start_drag_operation(card: CharacterCard):
 		preview.current_state = CardState.DRAGGING
 		emit_signal("drag_started", preview)
 		_apply_drag_visual_effects(true, preview)
-		Logger.info("DRAG", "Started dragging preview card", Logger.DetailLevel.MEDIUM)
-		
+		# Ensure preview also floats above
+		preview.z_index = DRAG_Z_INDEX
 	else:
 		# For battle scene or preview cards, always set dragging state
 		card.is_dragging = true
@@ -439,10 +456,12 @@ func _start_drag_operation(card: CharacterCard):
 		
 		# Apply visual effects for dragging
 		_apply_drag_visual_effects(true, card)
+		# Ensure this card floats above
+		z_index = DRAG_Z_INDEX
 		Logger.info("DRAG", "Started dragging card directly", Logger.DetailLevel.MEDIUM)
 		
 		# Ensure we're actually dragging the card by updating its position on the next frame
-		call_deferred("_update_drag_position", get_viewport().get_mouse_position())
+		#call_deferred("_update_drag_position", get_viewport().get_mouse_position())
 
 func _setup_preview_card(preview: CharacterCard):
 	Logger.info("DRAG", "Setting up preview card | Original: " + 
@@ -475,8 +494,9 @@ func _update_drag_position(position):
 		# Log the drag operation if debugging is enabled
 		if InputSettings.debug_drag:
 			Logger.info("DRAG_DEBUG", "Updating drag position: " + str(position) + 
-				  " | Card: " + get_character_name() + 
+				  " | Card: " + get_character_name() + " Node " +  str(self) +
 				  " | State: " + str(current_state) +
+				" | Duplicate: " + str(is_duplicate) +
 				  " | Is dragging: " + str(is_dragging))
 		
 		# Get position based on scene type
@@ -520,7 +540,7 @@ func _apply_drag_visual_effects(is_dragging: bool, card: CharacterCard):
 			card.rigid_body.scale = Vector2(1.1, 1.1)
 		else:
 			card.scale = Vector2(1.1, 1.1)
-		card.z_index = 1
+		card.z_index = DRAG_Z_INDEX
 		if card.hover_panel:
 			card.hover_panel.visible = false
 	else:
@@ -528,7 +548,7 @@ func _apply_drag_visual_effects(is_dragging: bool, card: CharacterCard):
 			card.rigid_body.scale = Vector2(1.0, 1.0)
 		else:
 			card.scale = Vector2(1.0, 1.0)
-		card.z_index = 0
+		#card.z_index = 0
 		if card.hover_panel and card.is_hovered:
 			card.hover_panel.visible = true
 
@@ -692,6 +712,9 @@ func _end_drag_operation():
 			rigid_body.linear_velocity = Vector2.ZERO
 			rigid_body.angular_velocity = 0
 			Logger.info("PHYSICS", "Returned rigid body freeze=true after drag: " + get_character_name(), Logger.DetailLevel.LOW)
+		
+		# Reset z-index after end of drag
+		z_index = DEFAULT_Z_INDEX
 		
 		current_state = CardState.IDLE
 		is_dragging = false

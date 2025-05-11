@@ -548,7 +548,9 @@ func show_character(character: CharacterCard) -> void:
 	var scene_cards = get_tree().get_nodes_in_group("character")
 	for c in scene_cards:
 		if !c.is_preview and c != original_card:
-			if c.has_method("disable_card"):
+			if c == card_clone:
+				c.disable_input()
+			elif c.has_method("disable_card"):
 				c.disable_card()
 	
 	# Ensure overlay is visible and on top
