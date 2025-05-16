@@ -21,6 +21,13 @@ class_name AbilityData
 @export var target: Variant = null
 @export var duration: Variant = null
 
+const SUMMARY_FIELDS := [
+	"name", "ability_class", "ability_type",
+	"random", "ninjutsu", "taijutsu", "genjutsu", "bloodline",
+	"damage", "support_damage",
+	"target", "duration"
+]
+
 # Helper function to get the first value from an array field, or the value itself if not an array
 func get_value(field_name: String, default_value = 0):
 	var value = get(field_name)
@@ -39,5 +46,12 @@ func get_damage_value(is_support: bool = false) -> int:
 	return get_value("damage", 0)
 
 func get_summary() -> String:
-	var dmg = get_damage_value()
-	return "%s (%s) dmg:%s" % [name, ability_class, str(dmg)] 
+	var result := ""
+	for pname in SUMMARY_FIELDS:
+		var value = get(pname)
+		var label = pname.replace("_", " ").capitalize()
+		var line = "%s: %s" % [label, str(value)]
+		if result != "":
+			result += "\n"
+		result += line
+	return result

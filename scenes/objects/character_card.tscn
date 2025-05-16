@@ -12,12 +12,14 @@ shader = ExtResource("1_bqxkg")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ybnyk"]
 bg_color = Color(1, 1, 0, 1)
+shadow_size = 1
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_murwl"]
 shader = ExtResource("2_yrlot")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hsjs0"]
-bg_color = Color(0.8, 0.5, 0.3, 1)
+bg_color = Color(10.656, 0.467, 0, 1)
+shadow_size = 1
 
 [node name="CharacterCard" type="Node2D" groups=["card", "character"]]
 z_index = 5
@@ -142,6 +144,8 @@ mouse_default_cursor_shape = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hsjs0")
 
 [node name="PressTimer" type="Timer" parent="."]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
 [connection signal="mouse_entered" from="RigidBody2D/CharacterVisuals/Portrait" to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="RigidBody2D/CharacterVisuals/Portrait" to="." method="_on_mouse_exited"]

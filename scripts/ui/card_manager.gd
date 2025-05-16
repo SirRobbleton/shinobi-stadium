@@ -47,7 +47,7 @@ func _on_card_dragged(card):
 	emit_signal("card_dragged", card)
 	
 	# If it's a character card during pre-battle phase, show targetable cards
-	if card is CharacterCard and !GamestateManager.has_switched_this_turn and !GamestateManager.in_battle_phase:
+	if card is CharacterCard and !BattleStateManager.has_switched_this_turn and !BattleStateManager.in_battle_phase:
 		for target_card in active_cards:
 			if target_card is CharacterCard and target_card != card and target_card.owner_id == card.owner_id:
 				target_card.set_targetable(true)
@@ -63,8 +63,8 @@ func _on_card_dropped(card):
 func _on_switch_requested(source_card, target_card):
 	Logger.log_message("CARD", "Switch requested from " + source_card.name + " to " + target_card.name)
 	
-	# Request the switch through the GamestateManager
-	if GamestateManager.perform_switch(source_card, target_card):
+	# Request the switch through the BattleStateManager
+	if BattleStateManager.perform_switch(source_card, target_card):
 		_swap_card_positions(source_card, target_card)
 
 func _swap_card_positions(source_card, target_card):

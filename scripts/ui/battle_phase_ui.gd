@@ -158,13 +158,13 @@ func _update_turn_display(player_id):
 		return
 		
 	if turn_label:
-		turn_label.text = player_id.capitalize() + "'s Turn"
+		turn_label.text = "Player" + str(player_id) + " Turn"
 		
 		# Set color based on player
-		var player_color = Color(0.2, 0.6, 1.0) if player_id == "player" else Color(1.0, 0.2, 0.2)
+		var player_color = Color(0.2, 0.6, 1.0) if player_id == BattleStateManager.PlayerId.PLAYER1 else Color(1.0, 0.2, 0.2)
 		turn_label.add_theme_color_override("font_color", player_color)
 		
-		print("[BATTLE_PHASE_UI] Updated turn display to: " + player_id)
+		print("[BATTLE_PHASE_UI] Updated turn display to: Player " + str(player_id))
 
 func _animate_phase_change():
 	# Only animate if we're in battle scene

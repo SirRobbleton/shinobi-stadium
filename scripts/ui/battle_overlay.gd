@@ -10,11 +10,13 @@ var current_character: CharacterCard = null
 @onready var ability_button = $OverlayLayout/PlayerFieldContainer/CenterContainer/ActionContainer/Ability/Button
 @onready var player_field_container = $OverlayLayout/PlayerFieldContainer
 
+@export var character_card_scene: PackedScene
+
 # References for the fill-center circle elements
 var attack_fill_circle: ColorRect
 var ability_fill_circle: ColorRect
 
-var displayed_card = null
+var displayed_card: CharacterCard = null
 var original_card: CharacterCard = null
 
 func _ready():
@@ -366,8 +368,9 @@ func _on_button_released(button):
 # Handle attack button press
 func _on_attack_button_pressed() -> void:
 	Logger.info("BATTLE", "Attack button pressed, closing overlay.")
-	clear_overlay()
 	# Optionally, emit a signal or call GamestateManager if needed
+	await BattleStateManager.begin_attack(original_card)
+	clear_overlay()
 
 # Handle ability button press
 func _on_ability_button_pressed() -> void:
@@ -385,8 +388,9 @@ func clear_overlay():
 	var overlay_character_cards = get_tree().get_nodes_in_group("character")
 	Logger.info("BATTLE", "Re-enabling " + str(overlay_character_cards.size()) + " character cards")
 	for card in overlay_character_cards:
-		if card.has_method("enable_card"):
-			card.enable_card()
+		if card.character_data.current_hp > 0:
+			if card.has_method("enable_card"):
+				card.enable_card()
 	# Hide the overlay
 	visible = false
 
@@ -458,7 +462,7 @@ func _input(event):
 		# If click was outside the overlay container and not on a target, hide the overlay
 		if !clicked_in_overlay:
 			Logger.info("BATTLE", "Click outside overlay detected, hiding")
-			GamestateManager.hide_battle_overlay(false)
+			BattleStateManager.hide_battle_overlay(false)
 			get_viewport().set_input_as_handled()
 			# Don't try to return a value from this path
 			return
@@ -495,24 +499,25 @@ func show_character(character: CharacterCard) -> void:
 			original_card.get_node("RigidBody2D").freeze = true
 	
 	# Create a duplicate for display
-	var card_clone = character.duplicate()
+	var card_clone = character_card_scene.instantiate()
+	card_clone.setup(character.character_data)
 	card_clone.scale = Vector2(2.0, 2.0)
-	card_clone.position = Vector2.ZERO # Center of Control
 	card_clone.visible = true
 	card_clone.modulate.a = 1.0
-	
-	# Ensure physics is frozen on the clone
-	if card_clone.has_node("RigidBody2D"):
-		card_clone.get_node("RigidBody2D").freeze = true
-		card_clone.get_node("RigidBody2D").input_pickable = false
 	
 	# Add to overlay Control node (parent of CardSlot)
 	var slot_control = card_slot.get_parent()
 	slot_control.add_child(card_clone)
 	displayed_card = card_clone
 	displayed_card.setup(character.character_data)
+	card_clone.position = card_slot.position # Center of Control
 	Logger.info("BATTLE", "Displayed clone for: " + character.character_data.name)
 	
+	# Ensure physics is frozen on the clone
+	if card_clone.has_node("RigidBody2D"):
+		card_clone.get_node("RigidBody2D").freeze = true
+		card_clone.get_node("RigidBody2D").input_pickable = false
+		
 	# Update attack and ability button labels based on character data
 	var character_data = character.character_data
 	var is_support_pos = false
@@ -559,28 +564,34 @@ func show_character(character: CharacterCard) -> void:
 		connect("visibility_changed", Callable(self, "_on_visibility_changed"))
 
 # Show character and highlight valid targets
-func show_highlighted_targets():
-	Logger.info("BATTLE", "Highlighting valid targets for: " + current_character.character_data.name)
+func show_highlighted_targets(ability: AbilityData):
+
+	Logger.info("BATTLE", "Highlighting valid targets for: " + BattleStateManager.current_character.character_data.name)
 	
 	# Get all opponent characters
 	var all_characters = get_tree().get_nodes_in_group("character")
 	var target_characters = []
 	
-	# Filter for opponent characters
-	for character in all_characters:
-		if !character.is_preview and character.has_meta("character_data"):
-			var char_data = character.get_meta("character_data")
-			
-			# Skip if character is on the same side as the attacker
-			if displayed_card && character.player_owned == displayed_card.player_owned:
-				Logger.info("BATTLE", "Skipping " + character.get_character_name() + " - same side as attacker (player_owned: " + str(character.player_owned) + ")")
-				continue
-				
-			# Skip if character is already defeated
-			if char_data.current_hp <= 0:
-				continue
-				
-			target_characters.append(character)
+	match ability.target:
+		"Active":
+			target_characters.append(all_characters[0])
+		"All":
+			# Filter for opponent characters
+			for character in all_characters:
+				if !character.is_preview and character.has_meta("character_data"):
+					var char_data = character.get_meta("character_data")
+					if char_data.current_hp <= 0:
+						continue
+								
+					# Skip if character is on the same side as the attacker
+					if character.player_id == BattleStateManager.current_player:
+						Logger.info("BATTLE", "Skipping " + character.get_character_name() + " - same side as attacker (player_owned: " + str(character.player_owned) + ")")
+						continue
+						
+					# Skip if character is already defeated
+					
+						
+					target_characters.append(character)
 			
 	# Check if we found any valid targets
 	if target_characters.size() == 0:
@@ -598,4 +609,5 @@ func show_highlighted_targets():
 			target.get_node("RigidBody2D").input_pickable = true
 		
 		Logger.info("BATTLE", "Highlighted target: " + target.character_data.name)
-		
+	
+	

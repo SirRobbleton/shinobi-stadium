@@ -29,7 +29,60 @@ enum CardInputState { DISABLED, TARGETABLE, SELECTABLE, PREVIEW }
 enum SceneType { SELECTION, BATTLE }
 
 var current_state: CardState = CardState.IDLE
+signal current_state_changed(old_state, new_state)
+
 var current_input_state: CardInputState = CardInputState.SELECTABLE
+signal current_input_state_changed(old_state, new_state)
+
+var player_id = null
+
+func set_current_state(val: CardState) -> void:
+	if current_state == val:
+		return
+	var old_state = current_state
+	current_state = val
+	match val:
+		CardState.IDLE:
+			# TODO: logic for IDLE state
+			pass
+		CardState.CLICKED:
+			# TODO: logic for CLICKED state
+			pass
+		CardState.DRAGGING:
+			# TODO: logic for DRAGGING state
+			pass
+	emit_signal("current_state_changed", old_state, val)
+	_on_current_state_changed(old_state, val)
+
+func _on_current_state_changed(old_state, new_state) -> void:
+	# Optional hook for state transition side effects
+	pass
+
+func set_current_input_state(val: CardInputState) -> void:
+	if current_input_state == val:
+		return
+	var old_state = current_input_state
+	current_input_state = val
+	match val:
+		CardInputState.DISABLED:
+			# TODO: logic for DISABLED state
+			pass
+		CardInputState.TARGETABLE:
+			# TODO: logic for TARGETABLE state
+			pass
+		CardInputState.SELECTABLE:
+			# TODO: logic for SELECTABLE state
+			pass
+		CardInputState.PREVIEW:
+			# TODO: logic for PREVIEW state
+			pass
+	emit_signal("current_input_state_changed", old_state, val)
+	_on_current_input_state_changed(old_state, val)
+
+func _on_current_input_state_changed(old_state, new_state) -> void:
+	# Optional hook for input state transition side effects
+	pass
+
 var scene_type: SceneType
 var click_timer: Timer
 var last_click_time: float = 0
@@ -72,6 +125,10 @@ var float_time: float = 0.0
 # Add these new static variables
 static var DRAG_Z_INDEX: int = 15
 static var DEFAULT_Z_INDEX: int = 5
+
+# Add scaling variables to control card size during drag
+var normal_scale: Vector2 = Vector2(1.0, 1.0)
+var drag_scale: Vector2 = Vector2(1.1, 1.1)
 
 func _ready():
 	# Initialize scene type
@@ -211,11 +268,17 @@ func _on_targetable_card_clicked(card):
 
 func _handle_mouse_press():
 	# Special handling for targetable cards - always take priority
-	if current_input_state == CardInputState.TARGETABLE and is_targetable:
-		Logger.info("CARD_STATE", "Click on targetable card: " + get_character_name(), Logger.DetailLevel.MEDIUM)
-		emit_signal("card_clicked", self)
-		# No need to process further for targetable cards
-		return
+	match current_input_state:
+		CardInputState.TARGETABLE:
+			Logger.info("CARD_STATE", "Click on targetable card: " + get_character_name(), Logger.DetailLevel.MEDIUM)
+			#emit_signal("card_clicked", self)
+			BattleStateManager.perform_attack(BattleStateManager.current_character.character_data, character_data)
+			tween_damage_popup(BattleStateManager.current_ability.damage)
+			tween_pop_hp_label()
+			tween_shake_card()
+			update_hp()
+			# No need to process further for targetable cards
+			return
 		
 	match current_state:
 		CardState.IDLE:
@@ -244,7 +307,7 @@ func _handle_mouse_press():
 				last_click_time = current_time
 				
 				# Start long press detection
-				current_state = CardState.CLICKED
+				set_current_state(CardState.CLICKED)
 				click_timer.start(InputSettings.long_press_threshold)
 				
 				# Schedule single click action after the double click threshold
@@ -279,74 +342,9 @@ func _handle_mouse_release():
 		# Make sure we didn't start dragging
 		click_timer.stop()
 	elif current_state == CardState.DRAGGING:
-		Logger.info("DRAG", "Mouse released while dragging | Card: " + get_character_name() + 
-			  " | Is Preview: " + str(is_preview), Logger.DetailLevel.MEDIUM)
-		
-		# Check if we're over a card slot
-		var mouse_pos = get_viewport().get_mouse_position()
-		var nearest_slot = _find_nearest_card_slot(mouse_pos)
-		
-		if nearest_slot and _is_within_snap_distance(mouse_pos, nearest_slot):
-			Logger.info("SLOT", "Card dropped on slot", Logger.DetailLevel.MEDIUM)
-			# Reset physics and disable collision so the card stays static in slot
-			if rigid_body:
-				rigid_body.freeze = true
-				rigid_body.linear_velocity = Vector2.ZERO
-				rigid_body.angular_velocity = 0
-			if collision_shape:
-				collision_shape.disabled = true
-			Logger.info("PHYSICS", "Card physics reset after drop: " + get_character_name(), Logger.DetailLevel.LOW)
-			# Reset z-index after drop
-			z_index = DEFAULT_Z_INDEX
-			if nearest_slot.held_card != null:
-				Logger.info("SLOT", "Switch positions requested between cards", Logger.DetailLevel.MEDIUM)
-				if self != nearest_slot.held_card:
-					emit_signal("switch_requested", self, nearest_slot.held_card)
-			else:				
-				if scene_type == SceneType.SELECTION:
-					CharacterSelection.emit_signal("place_character_on_slot", self, nearest_slot)
-				else:
-					emit_signal("place_character_on_slot", self, nearest_slot)
-
-			# Snap to slot position
-			if rigid_body:
-				rigid_body.global_position = nearest_slot.global_position
-			else:
-				global_position = nearest_slot.global_position
-			
-			# Update current slot reference
-			#current_slot = nearest_slot
-			if scene_type == SceneType.SELECTION:
-				SfxManager.play_random_sfx(["yo_1","yo_2"])
-			else:
-				SfxManager.play_sfx("slide")
-			# Notify slot that card was dropped (pass both slot and card)
-			# nearest_slot.emit_signal("card_dropped", nearest_slot, self)
-		elif is_duplicate:
-			# Cleanup preview: re-enable original and free duplicate
-			SfxManager.play_sfx("pop")
-			if original_card_reference:
-				original_card_reference.enable_card()
-			queue_free()
-			return
-		else:
-			if rigid_body:
-				rigid_body.global_position = current_slot.global_position
-			else:
-				global_position = current_slot.global_position
-		
-		current_state = CardState.IDLE
-		is_dragging = false
-		if is_preview:
-			Logger.info("DRAG", "Preview card drag ended", Logger.DetailLevel.MEDIUM)
-		else:
-			Logger.info("DRAG", "Original card drag ended", Logger.DetailLevel.MEDIUM)
-		
-		# Reset z-index after end of drag
-		z_index = DEFAULT_Z_INDEX
-		_apply_drag_visual_effects(false, self)
-	
-	current_state = CardState.IDLE
+		_end_drag_operation()
+		return
+	set_current_state(CardState.IDLE)
 
 # Renamed for clarity
 func _handle_single_click():
@@ -357,7 +355,7 @@ func _handle_single_click():
 		SceneType.SELECTION:
 			ZoomManager.show_card(character_data)
 		SceneType.BATTLE:
-			GamestateManager.show_battle_overlay(self)
+			BattleStateManager.show_battle_overlay(self)
 
 func _handle_long_press():
 	InputSettings.log_input_event("Long press handling initiated for " + get_character_name())
@@ -366,7 +364,7 @@ func _handle_long_press():
 	pending_click = false
 	pending_click_timer.stop()
 	
-	current_state = CardState.DRAGGING
+	set_current_state(CardState.DRAGGING)
 	is_dragging = true
 	
 	match scene_type:
@@ -376,7 +374,11 @@ func _handle_long_press():
 			else:
 				_start_drag_operation(self)
 		SceneType.BATTLE:
-			_start_drag_operation(self)
+			if !BattleStateManager.has_switched_this_turn:
+				_start_drag_operation(self)
+			else:
+				InputSettings.log_input_event("Player has already switched this turn: " + get_character_name())
+				return
 	
 	InputSettings.log_input_event("Started drag operation for " + get_character_name())
 
@@ -393,7 +395,8 @@ func _handle_double_click():
 
 func _handle_mouse_motion(event):
 	if current_state == CardState.DRAGGING:
-		_update_drag_position(event.position)
+		if !BattleStateManager.has_switched_this_turn:
+			_update_drag_position(event.position)
 
 func _start_drag_operation(card: CharacterCard):
 	# Switch physics mode to kinematic for smooth dragging
@@ -441,15 +444,16 @@ func _start_drag_operation(card: CharacterCard):
 		
 		# Start dragging preview
 		preview.is_dragging = true
-		preview.current_state = CardState.DRAGGING
+		preview.set_current_state(CardState.DRAGGING)
 		emit_signal("drag_started", preview)
 		_apply_drag_visual_effects(true, preview)
 		# Ensure preview also floats above
+		preview.set_current_state(CardState.DRAGGING)
 		preview.z_index = DRAG_Z_INDEX
 	else:
 		# For battle scene or preview cards, always set dragging state
 		card.is_dragging = true
-		card.current_state = CardState.DRAGGING
+		card.set_current_state(CardState.DRAGGING)
 		
 		# Make sure the emit_signal is called to notify listeners
 		emit_signal("drag_started", card)
@@ -477,7 +481,7 @@ func _setup_preview_card(preview: CharacterCard):
 	preview.collision_shape = preview.get_node("RigidBody2D/CollisionShape2D")
 	
 	# Initialize state
-	preview.current_state = CardState.DRAGGING
+	preview.set_current_state(CardState.DRAGGING)
 	preview.is_dragging = true
 	preview.scene_type = scene_type
 	
@@ -536,18 +540,20 @@ func _update_drag_position(position):
 
 func _apply_drag_visual_effects(is_dragging: bool, card: CharacterCard):
 	if is_dragging:
-		if card.rigid_body:
-			card.rigid_body.scale = Vector2(1.1, 1.1)
+		# Scale the portrait during drag, fallback to card if missing
+		if card.portrait:
+			card.portrait.scale = drag_scale
 		else:
-			card.scale = Vector2(1.1, 1.1)
+			card.scale = drag_scale
 		card.z_index = DRAG_Z_INDEX
 		if card.hover_panel:
 			card.hover_panel.visible = false
 	else:
-		if card.rigid_body:
-			card.rigid_body.scale = Vector2(1.0, 1.0)
+		# Reset portrait scale after drag, fallback to card
+		if card.portrait:
+			card.portrait.scale = normal_scale
 		else:
-			card.scale = Vector2(1.0, 1.0)
+			card.scale = normal_scale
 		#card.z_index = 0
 		if card.hover_panel and card.is_hovered:
 			card.hover_panel.visible = true
@@ -605,7 +611,7 @@ func disable_card():
 	if target_panel:
 		target_panel.visible = false
 	set_process_input(false)
-	current_state = CardState.IDLE
+	set_current_state(CardState.IDLE)
 	current_input_state = CardInputState.DISABLED
 	is_dragging = false
 	
@@ -628,7 +634,7 @@ func enable_card():
 	if rigid_body:
 		rigid_body.input_pickable = true
 	set_process_input(true)
-	current_state = CardState.IDLE
+	set_current_state(CardState.IDLE)
 	
 	# Only set to SELECTABLE if not currently targetable
 	if !is_targetable:
@@ -682,44 +688,72 @@ func _end_drag_operation():
 	if current_state == CardState.DRAGGING:
 		Logger.info("DRAG", "Ending drag operation for card: " + get_character_name(), Logger.DetailLevel.MEDIUM)
 		
-		# Check if we're over a card slot
+		# Determine drop location and handle accordingly
 		var mouse_pos = get_viewport().get_mouse_position()
 		var nearest_slot = _find_nearest_card_slot(mouse_pos)
-		
+
 		if nearest_slot and _is_within_snap_distance(mouse_pos, nearest_slot):
 			Logger.info("SLOT", "Card dropped on slot", Logger.DetailLevel.MEDIUM)
-			# Snap to slot position
+			# Reset physics and disable collision so the card stays static in slot
 			if rigid_body:
-				rigid_body.global_position = nearest_slot.global_position
+				rigid_body.freeze = true
+				rigid_body.linear_velocity = Vector2.ZERO
+				rigid_body.angular_velocity = 0
+			if collision_shape:
+				collision_shape.disabled = true
+			Logger.info("PHYSICS", "Card physics reset after drop: " + get_character_name(), Logger.DetailLevel.LOW)
+			# Reset z-index after drop
+			z_index = DEFAULT_Z_INDEX
+			# Handle switching or placement
+			if nearest_slot.held_card != null:
+				
+				if self != nearest_slot.held_card:
+					Logger.info("SLOT", "Switch positions requested between cards: " + self.get_character_name() + " and " + nearest_slot.held_card.get_character_name(), Logger.DetailLevel.MEDIUM)
+					emit_signal("switch_requested", self, nearest_slot.held_card)
+					#BattleStateManager.perform_switch(self, nearest_slot.held_card)
+					#Logger.info("SLOT", "Switch positions approved: " + str(), Logger.DetailLevel.MEDIUM)
+				else:
+					_return_card_to_slot_position()
 			else:
-				global_position = nearest_slot.global_position
-			
-			# Notify slot that card was dropped
-			nearest_slot.emit_signal("card_dropped", nearest_slot, self)
+				if scene_type == SceneType.SELECTION:
+					CharacterSelection.emit_signal("place_character_on_slot", self, nearest_slot)
+				else:
+					emit_signal("place_character_on_slot", self, nearest_slot)
+					#_return_card_to_slot_position()
+
+			# Snap to slot position and play sound
+			#if rigid_body:
+			#	rigid_body.global_position = nearest_slot.global_position
+			#else:
+			#	global_position = nearest_slot.global_position
+			if scene_type == SceneType.SELECTION:
+				SfxManager.play_random_sfx(["yo_1","yo_2"])
+			else:
+				SfxManager.play_sfx("slide")
 		elif is_duplicate:
+			# Cleanup preview: re-enable original and free duplicate
+			SfxManager.play_sfx("pop")
+			if original_card_reference:
+				original_card_reference.enable_card()
 			queue_free()
 			return
 		else:
-			Logger.info("CARD_STATE", "Repositioning card to original slot", Logger.DetailLevel.MEDIUM)
-			if rigid_body:
-				rigid_body.global_position = current_slot.global_position
-			else:
-				global_position = current_slot.global_position
-		
-		# After snapping / repositioning logic, before resetting state
+			_return_card_to_slot_position()
+		# After snapping or repositioning, reset physics
 		if rigid_body:
 			rigid_body.freeze = true
 			rigid_body.linear_velocity = Vector2.ZERO
 			rigid_body.angular_velocity = 0
 			Logger.info("PHYSICS", "Returned rigid body freeze=true after drag: " + get_character_name(), Logger.DetailLevel.LOW)
+
+		# Reset z-index and state
 		
-		# Reset z-index after end of drag
 		z_index = DEFAULT_Z_INDEX
-		
-		current_state = CardState.IDLE
 		is_dragging = false
-		emit_signal("drag_ended", self)
+		emit_signal("drag_ended", self, self)
 		_apply_drag_visual_effects(false, self)
+		print("FINISH DRAG")
+		set_current_state(CardState.IDLE)
 
 func is_support_character() -> bool:
 	if is_in_battle_scene():
@@ -744,3 +778,49 @@ func set_hover_detection(enabled: bool):
 	if is_targetable and current_input_state == CardInputState.TARGETABLE:
 		if rigid_body:
 			rigid_body.input_pickable = true
+			
+# Helper function to return a card to its original position
+func _return_card_to_slot_position():
+	if current_slot != null:
+		Logger.info("CARD", "Returning " + character_data.name + " to original position")
+		
+		# Create tween for smooth movement
+		var tween = create_tween()
+		tween.tween_property(rigid_body, "global_position", current_slot.global_position, 0.3)
+	else:
+		Logger.warning("CARD", "Warning: No original slot found for " + character_data.name)
+		
+func update_hp():
+	hp_label.text = str(character_data.current_hp)
+
+# Add tween-based damage feedback functions
+func tween_shake_card(duration: float = 0.2, magnitude: float = 10.0) -> void:
+	var original_pos = position
+	var tween = create_tween()
+	tween.tween_property(self, "position", original_pos + Vector2(magnitude, 0), duration * 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(self, "position", original_pos - Vector2(magnitude, 0), duration * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(self, "position", original_pos, duration * 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func tween_pop_hp_label(duration: float = 0.2, scale_factor: Vector2 = Vector2(1.2, 1.2)) -> void:
+	var original_scale = hp_label.scale
+	var tween = create_tween()
+	tween.tween_property(hp_label, "scale", scale_factor, duration * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(hp_label, "scale", original_scale, duration * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+func tween_damage_popup(damage: int) -> void:
+	# Create a floating red damage label above the HP label
+	var dmg_label = Label.new()
+	dmg_label.text = "-" + str(damage)
+	dmg_label.modulate = Color(1, 0, 0, 1)
+	dmg_label.scale = Vector2(1.7, 1.7)
+	# Position it at the HP label's global position
+	add_child(dmg_label)
+	dmg_label.global_position = hp_label.global_position
+	# Ensure it renders above the card
+	dmg_label.z_index = z_index + 1
+	# Tween upward and fade out over 1 second
+	var tween = create_tween()
+	var target_pos = hp_label.global_position + Vector2(0, -40)
+	await tween.tween_property(dmg_label, "global_position", target_pos, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tween.tween_property(dmg_label, "modulate:a", 0.0, 1.0)
+	tween.connect("finished", Callable(dmg_label, "queue_free"))

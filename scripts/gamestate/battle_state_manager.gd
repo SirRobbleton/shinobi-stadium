@@ -1,11 +1,16 @@
 extends Node
 
+#Players
+enum PlayerId { PLAYER1, PLAYER2 }
+
 # Game phases
 enum Phase {DRAW, CHAKRA, MAIN, END}
 
 # Current game state
 var current_phase: int = Phase.DRAW
-var current_player: String = "player"  # "player" or "opponent"
+var current_player: PlayerId = PlayerId.PLAYER1
+var current_character: CharacterCard = null
+var current_ability: AbilityData = null
 
 # Whether certain actions are allowed
 var can_play_cards: bool = false
@@ -25,12 +30,22 @@ var battle_chakra_labels = {}
 signal phase_changed(player_id, old_phase, new_phase)
 signal turn_changed(player_id)
 
+# Battle-specific state
+var has_switched_this_turn: bool = false
+var in_battle_phase: bool = false
+
+# Battle-related signals
+signal switch_performed(source, target)
+signal target_required(attacker_data)
+signal attack_initiated(attacker_data)
+signal attack_performed(attacker_data, target_data, is_defeated)
+
 func _ready():
 	print("[BATTLE_STATE_MANAGER] Registered, waiting for battle scene")
 	
 	# Only connect to SceneManager, do nothing else
 	if get_node("/root/SceneManager"):
-		get_node("/root/SceneManager").connect("scene_changed", _on_scene_changed)
+		get_node("/root/SceneManager").connect("scene_changed", Callable(self, "_on_scene_changed"))
 
 # Initialize only when battle scene is loaded
 func _on_scene_changed(scene_path):
@@ -204,7 +219,7 @@ func _on_chakra_updated(player_id, chakra_data):
 	if !is_initialized:
 		return
 		
-	if player_id == "player":
+	if player_id == BattleStateManager.PlayerId.PLAYER1:
 		print("[BATTLE_STATE_MANAGER] Chakra updated for player")
 		refresh_chakra_display()
 
@@ -214,7 +229,7 @@ func _on_chakra_drawn(player_id, new_chakra):
 	if !is_initialized:
 		return
 		
-	if player_id == "player":
+	if player_id == BattleStateManager.PlayerId.PLAYER1:
 		print("[BATTLE_STATE_MANAGER] New chakra drawn for player")
 		_animate_new_chakra(new_chakra)
 		refresh_chakra_display()
@@ -278,18 +293,17 @@ func refresh_chakra_display():
 			battle_chakra_labels[type].text = "x " + str(count)
 			print("[BATTLE_STATE_MANAGER] Updated battle " + chakra_manager.get_type_name(type) + " display to: x " + str(count))
 
-# Start a game
-func start_game():
+# Start a battle
+func start_battle():
 	# Only proceed if initialized
 	if !is_initialized:
-		print("[BATTLE_STATE_MANAGER] Cannot start game - not initialized")
+		print("[BATTLE_STATE_MANAGER] Cannot start battle - not initialized")
 		return
-		
-	print("[BATTLE_STATE_MANAGER] Starting new game")
-	current_player = "player"
+
+	print("[BATTLE_STATE_MANAGER] Starting battle")
+	current_player = PlayerId.PLAYER1
 	emit_signal("turn_changed", current_player)
-	
-	# Start with player's turn
+	# Begin first turn
 	start_turn(current_player)
 
 # Start a player's turn
@@ -298,7 +312,7 @@ func start_turn(player_id):
 	if !is_initialized:
 		return
 		
-	print("[BATTLE_STATE_MANAGER] Starting turn for " + player_id)
+	print("[BATTLE_STATE_MANAGER] Starting turn for Player" + str(player_id))
 	current_player = player_id
 	current_phase = Phase.DRAW
 	
@@ -310,10 +324,10 @@ func start_turn(player_id):
 
 # End the current turn
 func end_turn():
-	print("[BATTLE_STATE_MANAGER] Ending turn for " + current_player)
+	print("[BATTLE_STATE_MANAGER] Ending turn for " + str(current_player))
 	
 	# Toggle player
-	current_player = "opponent" if current_player == "player" else "player"
+	current_player = PlayerId.PLAYER2 if current_player == PlayerId.PLAYER1 else PlayerId.PLAYER1
 	
 	# Start new turn
 	start_turn(current_player)
@@ -354,7 +368,7 @@ func handle_draw_phase():
 
 # Handle logic for Chakra phase
 func handle_chakra_phase():
-	print("[BATTLE_STATE_MANAGER] Drawing chakra for " + current_player)
+	print("[BATTLE_STATE_MANAGER] Drawing chakra for " + str(current_player))
 	
 	# Draw chakra using ChakraManager
 	var chakra_manager = get_node_or_null("/root/ChakraManager")
@@ -374,7 +388,7 @@ func handle_main_phase():
 	can_use_abilities = true
 	
 	# For AI, would handle their turn here
-	if current_player == "opponent":
+	if current_player == PlayerId.PLAYER2:
 		# TODO: Implement AI logic
 		get_tree().create_timer(2.0).timeout.connect(func(): change_phase(Phase.END))
 
@@ -389,11 +403,11 @@ func handle_end_phase():
 func can_perform_action(action_type: String) -> bool:
 	match action_type:
 		"play_card":
-			return can_play_cards and current_player == "player"
+			return can_play_cards and current_player == PlayerId.PLAYER1
 		"attack":
-			return can_attack and current_player == "player"
+			return can_attack and current_player == PlayerId.PLAYER1
 		"ability":
-			return can_use_abilities and current_player == "player"
+			return can_use_abilities and current_player == PlayerId.PLAYER1
 		_:
 			return false
 
@@ -408,4 +422,42 @@ func debug_draw_chakra(amount=3):
 	if chakra_manager:
 		chakra_manager.draw_chakra("player", amount)
 	else:
-		push_error("ChakraManager not found when trying to draw chakra!") 
+		push_error("ChakraManager not found when trying to draw chakra!")
+
+# Core battle methods migrated from GameStateManager
+func perform_switch(source_card, target_card) -> bool:
+	Logger.info("BATTLE_STATE", "Checking switch for: " + source_card.character_data.name + " -> " + target_card.character_data.name)
+	Logger.info("BATTLE_STATE", "Has switched before: " + str(has_switched_this_turn))
+
+	if current_player == PlayerId.PLAYER1 and !has_switched_this_turn:
+		has_switched_this_turn = true
+		emit_signal("switch_performed", source_card, target_card)
+		return true
+	Logger.info("BATTLE_STATE", "Rejecting switch for: " + source_card.character_data.name + " -> " + target_card.character_data.name)
+	return false
+
+func begin_attack(character: CharacterCard):
+	Logger.info("BATTLE_STATE", "Beginning attack from: " + character.get_character_name())
+	current_character = character
+	current_ability = character.character_data.attack_data
+	Logger.info("BATTLE_STATE", "Current Ability: " + current_ability.get_summary())
+	var ov = get_tree().current_scene
+	ov.highlight_targets(current_ability)
+
+func perform_attack(attacker_data: CharacterData, target_data: CharacterData) -> bool:
+	Logger.info("BATTLE_STATE", "Attack: " + attacker_data.name + " -> " + target_data.name)
+	var is_defeated = target_data.take_damage(attacker_data.attack_data.damage)
+	
+	emit_signal("attack_performed", attacker_data, target_data, is_defeated)
+	return is_defeated
+
+func show_battle_overlay(character: CharacterCard) -> void:
+	Logger.info("BATTLE_STATE", "Show Battle Overlay for: " + character.get_character_name())
+	var ov = get_tree().current_scene.get_node_or_null("BattleOverlay")
+	if ov and ov.has_method("show_character"):
+		ov.show_character(character)
+
+func hide_battle_overlay(after_attack: bool = false) -> void:
+	var ov = get_tree().current_scene.get_node_or_null("BattleOverlay")
+	if ov and ov.has_method("clear_overlay"):
+		ov.clear_overlay()

@@ -14,6 +14,9 @@ extends Control
 	$BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition/Control/CardSlot,
 	$BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition2/Control/CardSlot
 ]
+@onready var player2_slot_active = $BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition/Control/CardSlot
+@onready var player2_slot_support1 = $BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition1/Control/CardSlot
+@onready var player2_slot_support2= $BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition2/Control/CardSlot
 
 # Player hand containers
 @onready var player_hand_container = $BattleLayout/PlayerHandContainer/HandCards
@@ -26,7 +29,7 @@ extends Control
 var opponent_active_shinobi: Node = null
 
 # Game state reference
-@onready var game_state = GamestateManager
+@onready var game_state = BattleStateManager
 
 # Track highlighted characters
 var highlighted_characters = []
@@ -35,12 +38,12 @@ func _ready():
 	# Connect signals
 	end_turn_button.connect("pressed", Callable(self, "_on_end_turn_pressed"))
 	game_state.connect("turn_changed", Callable(self, "_on_turn_changed"))
-	#game_state.connect("switch_performed", Callable(self, "_on_switch_performed"))
+	#game_state.connect("switch_performed", Callable(self, "_on_card_switch_requested"))
 	
-	# Connect to battle attack signals
-	game_state.target_required.connect(_on_target_required)
-	game_state.attack_initiated.connect(_on_attack_initiated)
-	game_state.attack_performed.connect(_on_attack_performed)
+	# Connect to battle attack signals through BattleStateManager
+	game_state.connect("target_required", Callable(self, "_on_target_required"))
+	game_state.connect("attack_initiated", Callable(self, "_on_attack_initiated"))
+	game_state.connect("attack_performed", Callable(self, "_on_attack_performed"))
 	
 	# Connect to battle overlay visibility changes
 	var battle_overlay = get_node_or_null("BattleOverlay")
@@ -86,10 +89,10 @@ func _initialize_battle_phase_ui():
 		add_child(battle_phase_ui)
 		Logger.info("BATTLE", "Initialized BattlePhaseUI")
 		
-	# Start the battle state machine
-	var battle_state = get_node_or_null("/root/BattleStateManager")
-	if battle_state:
-		battle_state.start_game()
+	# Battle start is now only called in _ready() to avoid duplicate chakra draws
+	# var battle_state = get_node_or_null("/root/BattleStateManager")
+	# if battle_state:
+	#     battle_state.start_battle()
 
 # Handler for when an attack requires a target
 func _on_target_required(attacker_data: CharacterData):
@@ -156,6 +159,54 @@ func find_opponent_active_shinobi():
 			return opponent_active_shinobi
 			
 	return null
+
+# Show character and highlight valid targets
+func highlight_targets(ability: AbilityData):
+
+	Logger.info("BATTLE", "Highlighting valid targets for: " + BattleStateManager.current_character.character_data.name)
+	
+	# Get all opponent characters
+	var all_characters = get_tree().get_nodes_in_group("character")
+	var target_characters = []
+	
+	match ability.target:
+		"Active":
+			target_characters.append(player2_slot_active.held_card)
+		"All":
+			# Filter for opponent characters
+			for character in all_characters:
+				if !character.is_preview and character.has_meta("character_data"):
+					var char_data = character.get_meta("character_data")
+					if char_data.current_hp <= 0:
+						continue
+								
+					# Skip if character is on the same side as the attacker
+					if character.player_id == BattleStateManager.current_player:
+						Logger.info("BATTLE", "Skipping " + character.get_character_name() + " - same side as attacker (player_owned: " + str(character.player_owned) + ")")
+						continue
+						
+					# Skip if character is already defeated
+					
+						
+					target_characters.append(character)
+			
+	# Check if we found any valid targets
+	if target_characters.size() == 0:
+		Logger.info("BATTLE", "No valid targets found!")
+		# Just leave the overlay open, showing only the attacker's card
+		return
+		
+	# Ask battle scene to highlight all valid targets
+	var battle_scene = get_tree().current_scene
+	for target in target_characters:
+		battle_scene.highlight_character(target)
+		
+		# Make sure it's input_pickable for targeting
+		if target.has_node("RigidBody2D"):
+			target.get_node("RigidBody2D").input_pickable = true
+		
+		Logger.info("BATTLE", "Highlighted target: " + target.character_data.name)
+	
 
 # Highlight a character as targetable (for attack)
 func highlight_character(character):
@@ -282,11 +333,11 @@ func process_attack(character):
 	Logger.info("CLICK_DEBUG", "Processing attack: " + attacker_data.name + " -> " + target_data.name)
 	
 	# Perform the attack
-	var is_defeated = GamestateManager.perform_attack(attacker_data, target_data)
+	var is_defeated = game_state.perform_attack(attacker_data, target_data)
 	Logger.info("CLICK_DEBUG", "Attack result: " + str(is_defeated))
 	
 	# Hide the battle overlay after attack
-	GamestateManager.hide_battle_overlay(true)
+	game_state.hide_battle_overlay(true)
 	Logger.info("CLICK_DEBUG", "Battle overlay hidden")
 	
 	# Clear highlight
@@ -299,11 +350,15 @@ func place_player_shinobi():
 	#Initialise characters
 	var active_character = character_card_scene.instantiate()
 	active_character.setup(CharacterSelection.active_shinobi)
+	active_character.player_id = BattleStateManager.PlayerId.PLAYER1
 	var support_1_character = character_card_scene.instantiate()
 	support_1_character.setup(CharacterSelection.support_shinobi_1)
+	support_1_character.player_id = BattleStateManager.PlayerId.PLAYER1
 	#await support_1_character.setup(CharacterSelection.support_shinobi_1)
 	var support_2_character = character_card_scene.instantiate()
 	support_2_character.setup(CharacterSelection.support_shinobi_2)
+	support_2_character.player_id = BattleStateManager.PlayerId.PLAYER1
+
 	#await support_2_character.setup(CharacterSelection.support_shinobi_2)
 	
 	# Place player selected shinobi on their slots
@@ -411,12 +466,12 @@ func _on_card_drag_started(card):
 	Logger.info("DRAG_DEBUG", "Card State: " + str(card.current_state))
 	Logger.info("DRAG_DEBUG", "Is Dragging: " + str(card.is_dragging))
 	
-	if game_state.current_player == "player" and not game_state.in_battle_phase:
+	if game_state.current_player == card.player_id:
 		Logger.info("DRAG_DEBUG", "Valid drag conditions met")
 		# Show valid target slots by making other player cards targetable
 		set_valid_switch_targets(card, true)
 	else:
-		Logger.info("DRAG_DEBUG", "Invalid drag conditions - Player: " + game_state.current_player + ", Battle Phase: " + str(game_state.in_battle_phase))
+		Logger.info("DRAG_DEBUG", "Invalid drag conditions - Player: " + str(game_state.current_player) + ", Battle Phase: " + str(game_state.in_battle_phase))
 
 # Handle card drag ending
 func _on_card_drag_ended(card, target):
@@ -429,15 +484,30 @@ func _on_card_drag_ended(card, target):
 	Logger.info("DRAG_DEBUG", "Card State: " + str(card.current_state))
 	Logger.info("DRAG_DEBUG", "Is Dragging: " + str(card.is_dragging))
 	
-	# Hide the target indicators
-	set_valid_switch_targets(card, false)
-	
+	if target != card:
+		# Check switch conditions directly
+		var can_switch = game_state.current_player == "player" and !game_state.has_switched_this_turn and !game_state.in_battle_phase
+		
+		if can_switch:
+			Logger.info("DRAG_DEBUG", "Switch conditions met, executing switch")
+			# Force direct swap of positions without any further checks
+			_on_card_switch_requested(card, target)
+		else:
+			Logger.info("DRAG_DEBUG", "Switch rejected - Current turn: " + game_state.current_player + 
+				  ", Already switched: " + str(game_state.has_switched_this_turn) + 
+				  ", Battle phase: " + str(game_state.in_battle_phase))
+			_return_card_to_original_position(card)
+	else:
+		#Logger.info("DRAG_DEBUG", "No other player cards found, returning to original position")
+		#_return_card_to_original_position(card)
+		pass
+	'''
 	# Find other player cards that are targetable
 	var other_player_cards = []
 	var character_cards = get_tree().get_nodes_in_group("character")
 	
 	for target_card in character_cards:
-		if target_card.player_owned and target_card.is_targetable == true:
+		if target_card.player_owned and (target_card.current_input_state == CharacterCard.CardInputState.TARGETABLE):
 			other_player_cards.append(target_card)
 			Logger.info("DRAG_DEBUG", "Found targetable card: " + target_card.character_data.name)
 	
@@ -453,7 +523,7 @@ func _on_card_drag_ended(card, target):
 		if can_switch:
 			Logger.info("DRAG_DEBUG", "Switch conditions met, executing switch")
 			# Force direct swap of positions without any further checks
-			_emergency_switch_positions(card, target_card)
+			_on_card_switch_requested(card, target_card)
 		else:
 			Logger.info("DRAG_DEBUG", "Switch rejected - Current turn: " + game_state.current_player + 
 				  ", Already switched: " + str(game_state.has_switched_this_turn) + 
@@ -462,6 +532,9 @@ func _on_card_drag_ended(card, target):
 	else:
 		Logger.info("DRAG_DEBUG", "No other player cards found, returning to original position")
 		_return_card_to_original_position(card)
+	'''
+	# Hide the target indicators
+	set_valid_switch_targets(card, false)
 
 # Show or hide targetable indicators on player cards
 func set_valid_switch_targets(source_card, show):
@@ -551,17 +624,17 @@ func _switch_card_positions(source_card, target_card):
 
 func _on_end_turn_pressed():
 	# Change the turn using the game state manager
-	game_state.change_turn()
+	game_state.end_turn()
 
 func _on_turn_changed(new_player):
 	# Handle turn changes
-	Logger.info("BATTLE_SCENE", "Turn changed to: " + new_player)
+	Logger.info("BATTLE_SCENE", "Turn changed to: Player" + str(new_player))
 	
 	# Disable the end turn button during opponent's turn
-	end_turn_button.disabled = (new_player != "player")
+	end_turn_button.disabled = (new_player != BattleStateManager.PlayerId.PLAYER1)
 	
 	# Handle AI turn if it's the opponent's turn
-	if new_player == "opponent":
+	if new_player == BattleStateManager.PlayerId.PLAYER2:
 		handle_opponent_turn()
 		
 func handle_opponent_turn():
@@ -570,7 +643,7 @@ func handle_opponent_turn():
 	
 	# Wait a bit, then end the opponent's turn
 	await get_tree().create_timer(1.5).timeout
-	game_state.change_turn()  # Change back to player's turn
+	game_state.end_turn()  # Change back to player's turn
 
 # Handle switch request from a character card
 func _on_card_switch_requested(source_card, target_card):
@@ -613,20 +686,36 @@ func _on_card_switch_requested(source_card, target_card):
 			source_slot.held_card = target_card
 			target_slot.held_card = source_card
 			
-			# Update the cards' references to slots using both methods for compatibility
-			source_card.set_meta("slot_reference", target_slot)
-			target_card.set_meta("slot_reference", source_slot)
-			source_card.current_slot = target_slot
-			target_card.current_slot = source_slot
-			
+			Logger.info("BATTLE_SCENE", "Old Source Position: " + str(source_card.position))
+			Logger.info("BATTLE_SCENE", "Old Source Rigidbody Position: " + str(source_card.rigid_body.position))
+			Logger.info("BATTLE_SCENE", "Old Source Global Position: " + str(source_card.global_position))
+			Logger.info("BATTLE_SCENE", "Old Target Position: " + str(target_card.global_position))
+						
 			# Create tween for smooth movement
 			var tween = create_tween()
 			tween.parallel().tween_property(source_card.rigid_body, "global_position", target_slot_pos, 0.3)
-			tween.parallel().tween_property(target_card.rigid_body, "global_position", source_slot_pos, 0.3)
+			tween.parallel().tween_property(target_card.rigid_body, "global_position", source_slot_pos, 0.6)
+			await tween.finished
+			
+			# Update the cards' references to slots using both methods for compatibility
+			#source_card.set_meta("slot_reference", target_slot)
+			#target_card.set_meta("slot_reference", source_slot)
+			source_card.current_slot = target_slot
+			target_card.current_slot = source_slot
 
-			Logger.info("BATTLE_SCENE", "New Source Slot Position: " + str(source_card.position))
-			Logger.info("BATTLE_SCENE", "New Source Slot Position: " + str(source_card.global_position))
-			Logger.info("BATTLE_SCENE", "New Target Slot Position: " + str(target_card.global_position))
+			source_card.get_parent().remove_child(source_card)
+			target_card.get_parent().remove_child(target_card)
+			source_card.position = target_slot.position
+			target_card.position = source_slot.position
+			source_card.rigid_body.position = Vector2.ZERO
+			target_card.rigid_body.position = Vector2.ZERO
+			source_card.current_slot.get_parent().add_child(source_card)
+			target_card.current_slot.get_parent().add_child(target_card)
+			
+			Logger.info("BATTLE_SCENE", "New Source Position: " + str(source_card.position))
+			Logger.info("BATTLE_SCENE", "New Source Rigidbody Position: " + str(source_card.rigid_body.position))
+			Logger.info("BATTLE_SCENE", "New Source Position: " + str(source_card.global_position))
+			Logger.info("BATTLE_SCENE", "New Target Position: " + str(target_card.global_position))
 			
 			# Play switch sound
 			if SfxManager != null:
@@ -644,7 +733,7 @@ func _on_card_switch_requested(source_card, target_card):
 # Helper function to return a card to its original position
 func _return_card_to_original_position(card):
 	if card.has_meta("slot_reference"):
-		var original_slot = card.get_meta("slot_reference")
+		var original_slot = card.current_slot
 		Logger.info("BATTLE_SCENE", "Returning " + card.character_data.name + " to original position")
 		
 		# Create tween for smooth movement
