@@ -6,7 +6,7 @@ extends Node
 
 # Flag to track if we're in the battle scene
 var in_battle_scene = false
-var player_id = "player"
+var player_id = "PLAYER1"  # Updated to match BattleStateManager.PlayerId.PLAYER1
 
 func _ready():
     # Connect to scene change signals
@@ -20,14 +20,18 @@ func _ready():
             _find_chakra_container()
         
         # Connect to ChakraManager signals
-        if get_node("/root/ChakraManager"):
-            get_node("/root/ChakraManager").connect("chakra_updated", _on_chakra_updated)
-            get_node("/root/ChakraManager").connect("chakra_drawn", _on_chakra_drawn)
+        var chakra_manager = get_node_or_null("/root/ChakraManager")
+        if chakra_manager:
+            chakra_manager.connect("chakra_updated", _on_chakra_updated)
+            chakra_manager.connect("chakra_drawn", _on_chakra_drawn)
+            Logger.info("CHAKRA_DISPLAY", "Connected to ChakraManager signals")
         else:
-            push_error("ChakraManager singleton not found!")
+            Logger.warning("CHAKRA_DISPLAY", "ChakraManager singleton not found!")
         
-        print("[CHAKRA_DISPLAY] Initialized for player: " + player_id)
-    
+        Logger.info("CHAKRA_DISPLAY", "Initialized for player: " + player_id)
+    else:
+        Logger.warning("CHAKRA_DISPLAY", "SceneManager not found!")
+
 # Handle scene changes
 func _on_scene_changed(scene_path):
     if scene_path == "res://scenes/battle/battle_scene.tscn":
@@ -47,21 +51,14 @@ func _find_chakra_container():
         
     # Try to find the chakra container in the current scene
     var current_scene = get_tree().current_scene
-    var battle_overlay = current_scene.get_node_or_null("BattleOverlay")
+    chakra_container = current_scene.get_node_or_null("BattleLayout/PlayerHandContainer/HandCards/ChakraContainer")
     
-    if battle_overlay:
-        chakra_container = battle_overlay.get_node_or_null("OverlayLayout/PlayerHandContainer/ChakraContainer")
-        
-        if chakra_container:
-            print("[CHAKRA_DISPLAY] Found chakra container at: " + str(chakra_container.get_path()))
-            _setup_chakra_labels()
-        else:
-            print("[CHAKRA_DISPLAY] Chakra container not found in BattleOverlay! Available nodes:")
-            _print_node_tree(battle_overlay, 2)
-            push_error("Chakra container not found in BattleOverlay!")
+    if chakra_container:
+        Logger.info("CHAKRA_DISPLAY", "Found chakra container at: " + str(chakra_container.get_path()))
+        _setup_chakra_labels()
     else:
-        # If not found, try a different approach or wait for scene to be ready
-        print("[CHAKRA_DISPLAY] BattleOverlay not found, will try again later")
+        Logger.warning("CHAKRA_DISPLAY", "Chakra container not found! Available nodes:")
+        _print_node_tree(current_scene.get_node_or_null("BattleLayout/PlayerHandContainer/HandCards"), 2)
         # Schedule a retry after a small delay
         get_tree().create_timer(0.5).timeout.connect(_find_chakra_container)
 
@@ -75,7 +72,7 @@ func _print_node_tree(node, depth = 0):
         indent += "  "
         
     for child in node.get_children():
-        print(indent + "- " + child.name + " [" + child.get_class() + "]")
+        Logger.info("CHAKRA_DISPLAY", indent + "- " + child.name + " [" + child.get_class() + "]")
         _print_node_tree(child, depth + 1)
 
 func _setup_chakra_labels():
@@ -92,54 +89,28 @@ func _setup_chakra_labels():
         var container_name = type_name.substr(0, 1) + type_name.substr(1).to_lower() + "Container"
         var label_path = "VBoxContainer/" + container_name + "/Label"
         
-        print("[CHAKRA_DISPLAY] Looking for label at path: " + label_path)
+        Logger.info("CHAKRA_DISPLAY", "Looking for label at path: " + label_path)
         
         var label = chakra_container.get_node_or_null(label_path)
         if label:
             chakra_labels[type] = label
-            print("[CHAKRA_DISPLAY] Found label for " + type_name)
+            Logger.info("CHAKRA_DISPLAY", "Found label for " + type_name)
         else:
-            # Try alternate approaches to find the label
-            print("[CHAKRA_DISPLAY] Label not found at path: " + label_path)
-            print("[CHAKRA_DISPLAY] Available nodes in chakra container:")
-            _print_node_tree(chakra_container, 1)
-            
-            # Try direct search
-            label = _find_label_by_partial_name(chakra_container, type_name.to_lower())
-            if label:
-                chakra_labels[type] = label
-                print("[CHAKRA_DISPLAY] Found label for " + type_name + " using direct search")
-            else:
-                push_error("Label for " + type_name + " not found")
+            Logger.warning("CHAKRA_DISPLAY", "Label not found at path: " + label_path)
     
     # Initial update of UI
     refresh_display()
 
-# Helper function to find a label by partial name match
-func _find_label_by_partial_name(parent_node, partial_name):
-    for child in parent_node.get_children():
-        if child is Label and partial_name.to_lower() in child.name.to_lower():
-            return child
-        
-        if child.get_child_count() > 0:
-            var result = _find_label_by_partial_name(child, partial_name)
-            if result:
-                return result
-    
-    return null
-
 func _on_chakra_updated(updated_player_id, chakra_data):
     # Only update if it's for this player and we're in battle scene
     if updated_player_id == player_id and in_battle_scene:
-        print("[CHAKRA_DISPLAY] Chakra updated for player: " + player_id)
+        Logger.info("CHAKRA_DISPLAY", "Chakra updated for player: " + player_id)
         refresh_display()
 
 func _on_chakra_drawn(updated_player_id, new_chakra):
     # Only handle if it's for this player and we're in battle scene
     if updated_player_id == player_id and in_battle_scene:
-        print("[CHAKRA_DISPLAY] New chakra drawn for player: " + player_id)
-        
-        # Could add animations or highlights for newly drawn chakra
+        Logger.info("CHAKRA_DISPLAY", "New chakra drawn for player: " + player_id)
         _animate_new_chakra(new_chakra)
 
 func _animate_new_chakra(new_chakra):
@@ -152,7 +123,7 @@ func _animate_new_chakra(new_chakra):
     
     for chakra_type in new_chakra:
         var type_name = chakra_manager.get_type_name(chakra_type)
-        print("[CHAKRA_DISPLAY] Animating new " + type_name + " chakra")
+        Logger.info("CHAKRA_DISPLAY", "Animating new " + type_name + " chakra")
         
         if chakra_labels.has(chakra_type):
             var label = chakra_labels[chakra_type]
@@ -163,24 +134,40 @@ func _animate_new_chakra(new_chakra):
             tween.tween_property(label, "scale", original_scale * 1.5, 0.2)
             tween.tween_property(label, "scale", original_scale, 0.2)
 
+# Update the display with current chakra values
 func refresh_display():
-    # Only proceed if we're in battle scene
-    if !in_battle_scene:
+    if !chakra_container:
+        Logger.warning("CHAKRA_DISPLAY", "Cannot refresh display - no container found")
         return
         
-    # Get current chakra data from manager
-    var chakra_manager = get_node("/root/ChakraManager")
-    if not chakra_manager:
-        push_error("ChakraManager not found!")
+    var chakra_manager = get_node_or_null("/root/ChakraManager")
+    if !chakra_manager:
+        Logger.warning("CHAKRA_DISPLAY", "Cannot refresh display - ChakraManager not found")
         return
-    
+        
     var chakra_data = chakra_manager.get_all_chakra(player_id)
+    if !chakra_data:
+        Logger.warning("CHAKRA_DISPLAY", "No chakra data found for player: " + player_id)
+        return
+        
+    Logger.info("CHAKRA_DISPLAY", "Refreshing display with chakra data: " + str(chakra_data))
     
-    # Update labels for each chakra type
-    for type in chakra_data.keys():
-        if chakra_labels.has(type):
-            var count = chakra_data[type]
-            chakra_labels[type].text = "x " + str(count)
-            print("[CHAKRA_DISPLAY] Updated " + chakra_manager.get_type_name(type) + " display to: x " + str(count))
+    # Update each label with its corresponding chakra value
+    for chakra_type in chakra_labels.keys():
+        if !chakra_labels.has(chakra_type) || !chakra_labels[chakra_type]:
+            Logger.warning("CHAKRA_DISPLAY", "Label not found for chakra type: " + str(chakra_type))
+            continue
+            
+        var label = chakra_labels[chakra_type]
+        var value = chakra_data[chakra_type] if chakra_data.has(chakra_type) else 0
+        
+        # Format text to show chakra count
+        label.text = str(value)
+        
+        # Add visual feedback for debugging
+        if value > 0:
+            label.add_theme_color_override("font_color", Color(0, 1, 0))  # Green for positive values
         else:
-            print("[CHAKRA_DISPLAY] No label found for type: " + str(type)) 
+            label.remove_theme_color_override("font_color")  # Default color for zero
+            
+        Logger.info("CHAKRA_DISPLAY", "Updated " + str(chakra_manager.get_type_name(chakra_type)) + " label to: " + str(value)) 

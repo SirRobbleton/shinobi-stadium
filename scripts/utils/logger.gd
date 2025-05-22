@@ -19,9 +19,9 @@ var current_detail_level = DetailLevel.MEDIUM
 
 # Detail level toggles - individual controls for each level
 var detail_level_enabled = {
-	DetailLevel.LOW: false,    # Low-detail logs are off by default
+	DetailLevel.LOW: true,    # Low-detail logs are off by default
 	DetailLevel.MEDIUM: true,  # Medium-detail logs are on by default
-	DetailLevel.HIGH: true     # High-detail logs are on by default
+	DetailLevel.HIGH: false     # High-detail logs are on by default
 }
 
 # Category toggles - set to false to disable a specific category

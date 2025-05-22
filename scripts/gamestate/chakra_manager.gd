@@ -1,5 +1,8 @@
 extends Node
 
+# Preload Player class (so we can use it in type annotations)
+const PlayerClass = preload("res://scripts/gamestate/player.gd")
+
 enum ChakraType {NINJUTSU, TAIJUTSU, GENJUTSU, BLOODLINE}
 
 # Dictionary to track current chakra amounts for both players
@@ -23,14 +26,14 @@ func _ready():
 	Logger.info("CHAKRA", "Initialized")
 
 func reset_chakra_pools():
-	for player_id in ["player", "opponent"]:
+	for player_id in ["PLAYER1", "PLAYER2"]:
 		player_chakra[player_id] = {}
 		for type in ChakraType.values():
 			player_chakra[player_id][type] = 0
 	Logger.info("CHAKRA", "Reset chakra pools")
 	
 func draw_chakra(player_id, amount=DEFAULT_CHAKRA_DRAW):
-	Logger.info("CHAKRA", "Drawing " + str(amount) + " chakra for Player" + str(player_id))
+	Logger.info("CHAKRA", "Drawing " + str(amount) + " chakra for " + player_id)
 	var new_chakra = []
 	
 	# Generate random chakra for the player
@@ -39,20 +42,40 @@ func draw_chakra(player_id, amount=DEFAULT_CHAKRA_DRAW):
 		add_chakra(player_id, random_type)
 		new_chakra.append(random_type)
 	
-	emit_signal("chakra_updated", player_id, player_chakra[players[player_id]])
+	emit_signal("chakra_updated", player_id, player_chakra[player_id])
 	emit_signal("chakra_drawn", player_id, new_chakra)
 	
 	Logger.info("CHAKRA", "Drew chakra: " + str(new_chakra))
 	return new_chakra
 
-func add_chakra(player_id, chakra_type, amount=1):
-	var player = players[player_id]
-	if not player_chakra[player].has(chakra_type):
-		player_chakra[player][chakra_type] = 0
+# Method to draw chakra directly for a Player object
+func draw_chakra_for_player(player: PlayerClass, amount=DEFAULT_CHAKRA_DRAW):
+	Logger.info("CHAKRA", "Drawing " + str(amount) + " chakra for Player " + str(player.player_id))
+	var new_chakra = []
 	
-	player_chakra[player][chakra_type] += amount
+	# Generate random chakra
+	for i in range(amount):
+		var random_type = randi() % ChakraType.size()
+		new_chakra.append(random_type)
+		player.add_chakra(random_type, 1)
+	
+	# For compatibility with existing code
+	var player_id_str = "PLAYER" + str(player.player_id + 1)
+	emit_signal("chakra_drawn", player_id_str, new_chakra)
+	
+	Logger.info("CHAKRA", "Drew chakra for player object: " + str(new_chakra))
+	return new_chakra
+
+func add_chakra(player_id, chakra_type, amount=1):
+	if not player_chakra[player_id].has(chakra_type):
+		player_chakra[player_id][chakra_type] = 0
+	
+	player_chakra[player_id][chakra_type] += amount
 	Logger.info("CHAKRA", "Added " + str(amount) + " " + 
-		  ChakraType.keys()[chakra_type] + " chakra to " + player)
+		  ChakraType.keys()[chakra_type] + " chakra to " + player_id)
+	
+	# Emit signal for UI update
+	emit_signal("chakra_updated", player_id, player_chakra[player_id])
 	
 # Get chakra count for a specific type
 func get_chakra_count(player_id, chakra_type):
@@ -61,32 +84,33 @@ func get_chakra_count(player_id, chakra_type):
 	return 0
 	
 # Check if player can afford a cost
-func can_afford(player_id, cost_dict):
+func can_afford_cost(player_id, cost_dict):
 	for type in cost_dict:
-		var required = cost_dict[type]
-		if get_chakra_count(player_id, type) < required:
+		if get_chakra_count(player_id, type) < cost_dict[type]:
 			return false
 	return true
-	
-# Spend chakra if player can afford it
+
+# Spend chakra for a cost
 func spend_chakra(player_id, cost_dict):
-	if can_afford(player_id, cost_dict):
-		Logger.info("CHAKRA", "Spending chakra for " + player_id + ": " + str(cost_dict))
-		
+	if can_afford_cost(player_id, cost_dict):
 		for type in cost_dict:
 			player_chakra[player_id][type] -= cost_dict[type]
 		
 		emit_signal("chakra_updated", player_id, player_chakra[player_id])
 		emit_signal("chakra_spent", player_id, cost_dict)
 		return true
-	
-	Logger.warning("CHAKRA", "Cannot afford chakra cost: " + str(cost_dict))
 	return false
 
-# Get the type name as a string
-func get_type_name(chakra_type):
-	return ChakraType.keys()[chakra_type]
-
-# Returns all chakra data for a player
+# Get all chakra for a player
 func get_all_chakra(player_id):
-	return player_chakra[player_id] 
+	return player_chakra[player_id].duplicate()
+
+# Helper function to get the name of a chakra type
+func get_type_name(type):
+	return ChakraType.keys()[type]
+	
+# New method to convert from PlayerId enum to string ID
+func player_id_to_string(player_id):
+	if player_id is int:
+		return "PLAYER" + str(player_id + 1)
+	return player_id

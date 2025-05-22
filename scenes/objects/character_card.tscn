@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://bovi23yf8c4uk"]
+[gd_scene load_steps=11 format=3 uid="uid://bovi23yf8c4uk"]
 
 [ext_resource type="Shader" uid="uid://djs7a4c1jackv" path="res://scenes/selection/character_card_backlight.gdshader" id="1_bqxkg"]
 [ext_resource type="Script" uid="uid://bbtccol8rkhod" path="res://scripts/objects/character_card.gd" id="1_yrlot"]
 [ext_resource type="Shader" uid="uid://drjskxiimuoxd" path="res://scenes/selection/character_card_target.gdshader" id="2_yrlot"]
+[ext_resource type="Shader" uid="uid://bx4dhpto20yxu" path="res://scenes/objects/character_card_target_hover.gdshader" id="3_yrlot"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kq5d4"]
 size = Vector2(205, 271)
@@ -18,8 +19,10 @@ shadow_size = 1
 shader = ExtResource("2_yrlot")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hsjs0"]
-bg_color = Color(10.656, 0.467, 0, 1)
 shadow_size = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ybnyk"]
+shader = ExtResource("3_yrlot")
 
 [node name="CharacterCard" type="Node2D" groups=["card", "character"]]
 z_index = 5
@@ -127,7 +130,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_ybnyk")
 
 [node name="TargetPanel" type="Panel" parent="RigidBody2D/CharacterVisuals/Portrait"]
 visible = false
-z_index = -1
+z_index = -3
 material = SubResource("ShaderMaterial_murwl")
 layout_mode = 1
 anchors_preset = 15
@@ -137,6 +140,24 @@ offset_left = -4.0
 offset_top = -4.0
 offset_right = 4.0
 offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hsjs0")
+
+[node name="TargetHoverPanel" type="Panel" parent="RigidBody2D/CharacterVisuals/Portrait"]
+visible = false
+z_index = -2
+material = SubResource("ShaderMaterial_ybnyk")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -3.77703
+offset_top = -4.15026
+offset_right = 4.22298
+offset_bottom = 3.84973
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1

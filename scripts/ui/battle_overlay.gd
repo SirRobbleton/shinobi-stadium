@@ -383,14 +383,14 @@ func _on_ability_button_pressed() -> void:
 # Add new clear_overlay method
 func clear_overlay():
 	Logger.info("BATTLE", "Clearing overlay (unified logic)")
-	_restore_original_card()
+	#_restore_original_card()
 	# Re-enable all character cards
 	var overlay_character_cards = get_tree().get_nodes_in_group("character")
 	Logger.info("BATTLE", "Re-enabling " + str(overlay_character_cards.size()) + " character cards")
-	for card in overlay_character_cards:
-		if card.character_data.current_hp > 0:
-			if card.has_method("enable_card"):
-				card.enable_card()
+	#for card in overlay_character_cards:
+	#	if card.character_data.current_hp > 0:
+	#		if card.has_method("enable_card"):
+	#			card.enable_card()
 	# Hide the overlay
 	visible = false
 
@@ -499,8 +499,10 @@ func show_character(character: CharacterCard) -> void:
 			original_card.get_node("RigidBody2D").freeze = true
 	
 	# Create a duplicate for display
-	var card_clone = character_card_scene.instantiate()
+	var card_clone: CharacterCard = character_card_scene.instantiate()
 	card_clone.setup(character.character_data)
+	card_clone.current_input_state = CharacterCard.CardInputState.PREVIEW
+	card_clone.current_slot = original_card.current_slot
 	card_clone.scale = Vector2(2.0, 2.0)
 	card_clone.visible = true
 	card_clone.modulate.a = 1.0
@@ -551,12 +553,13 @@ func show_character(character: CharacterCard) -> void:
 	
 	# Disable all other battle cards while overlay is open
 	var scene_cards = get_tree().get_nodes_in_group("character")
-	for c in scene_cards:
+	for c: CharacterCard in scene_cards:
 		if !c.is_preview and c != original_card:
 			if c == card_clone:
 				c.disable_input()
 			elif c.has_method("disable_card"):
 				c.disable_card()
+				c.stop_pulsate_glow()
 	
 	# Ensure overlay is visible and on top
 	visible = true

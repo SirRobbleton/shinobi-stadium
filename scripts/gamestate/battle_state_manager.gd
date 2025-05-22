@@ -1,10 +1,18 @@
 extends Node
 
+# Preload Player class
+#const PlayerClass = preload("res://scripts/gamestate/player.gd")
+
 #Players
 enum PlayerId { PLAYER1, PLAYER2 }
 
 # Game phases
 enum Phase {DRAW, CHAKRA, MAIN, END}
+
+# Player objects
+var player1: Player
+var player2: Player
+var current_player_obj: Player
 
 # Current game state
 var current_phase: int = Phase.DRAW
@@ -43,9 +51,23 @@ signal attack_performed(attacker_data, target_data, is_defeated)
 func _ready():
 	print("[BATTLE_STATE_MANAGER] Registered, waiting for battle scene")
 	
+	# Initialize player objects
+	player1 = Player.new(PlayerId.PLAYER1, "Player 1")
+	player2 = Player.new(PlayerId.PLAYER2, "Player 2")
+	
+	# Set current player
+	current_player_obj = player1
+	
+	# Connect to player signals
+	_connect_player_signals(player1)
+	_connect_player_signals(player2)
+	
 	# Only connect to SceneManager, do nothing else
-	if get_node("/root/SceneManager"):
-		get_node("/root/SceneManager").connect("scene_changed", Callable(self, "_on_scene_changed"))
+	SceneManager.connect("scene_changed", Callable(self, "_on_scene_changed"))
+
+# Connect to player signals
+func _connect_player_signals(player: Player):
+	player.connect("chakra_changed", Callable(self, "_on_player_chakra_changed"))
 
 # Initialize only when battle scene is loaded
 func _on_scene_changed(scene_path):
@@ -62,9 +84,8 @@ func _initialize_manager():
 	print("[BATTLE_STATE_MANAGER] Initializing manager for battle scene")
 	
 	# Connect to ChakraManager signals
-	if get_node("/root/ChakraManager"):
-		get_node("/root/ChakraManager").connect("chakra_updated", _on_chakra_updated)
-		get_node("/root/ChakraManager").connect("chakra_drawn", _on_chakra_drawn)
+	ChakraManager.connect("chakra_updated", _on_chakra_updated)
+	ChakraManager.connect("chakra_drawn", _on_chakra_drawn)
 	
 	# Find chakra containers with short delay to ensure scene is fully ready
 	get_tree().create_timer(0.2).timeout.connect(_find_chakra_containers)
@@ -147,7 +168,7 @@ func _print_node_tree(node, depth = 0):
 # Setup chakra label references
 func _setup_chakra_labels():
 	# Get references to all chakra type labels
-	var chakra_types = get_node("/root/ChakraManager").ChakraType
+	var chakra_types = ChakraManager.ChakraType
 	
 	# Setup overlay labels
 	if overlay_chakra_container:
@@ -213,7 +234,13 @@ func _find_label_by_partial_name(parent_node, partial_name):
 	
 	return null
 
-# Handler for chakra update signal
+# Handler for player chakra changed signal
+func _on_player_chakra_changed(type, old_amount, new_amount):
+	# Only refresh display if it's player1 (since we only show player's chakra in UI)
+	if current_player_obj == player1:
+		refresh_chakra_display()
+
+# Handler for chakra update signal (from ChakraManager)
 func _on_chakra_updated(player_id, chakra_data):
 	# Only proceed if initialized
 	if !is_initialized:
@@ -221,6 +248,11 @@ func _on_chakra_updated(player_id, chakra_data):
 		
 	if player_id == BattleStateManager.PlayerId.PLAYER1:
 		print("[BATTLE_STATE_MANAGER] Chakra updated for player")
+		
+		# Update player object's chakra
+		for type in chakra_data:
+			player1.set_chakra(type, chakra_data[type])
+			
 		refresh_chakra_display()
 
 # Handler for chakra drawn signal
@@ -231,6 +263,12 @@ func _on_chakra_drawn(player_id, new_chakra):
 		
 	if player_id == BattleStateManager.PlayerId.PLAYER1:
 		print("[BATTLE_STATE_MANAGER] New chakra drawn for player")
+		
+		# Update player object's chakra and animate
+		var player = player1 if player_id == PlayerId.PLAYER1 else player2
+		for chakra_type in new_chakra:
+			player.add_chakra(chakra_type, 1)
+			
 		_animate_new_chakra(new_chakra)
 		refresh_chakra_display()
 
@@ -240,10 +278,8 @@ func _animate_new_chakra(new_chakra):
 	if !is_initialized:
 		return
 		
-	var chakra_manager = get_node("/root/ChakraManager")
-	
 	for chakra_type in new_chakra:
-		var type_name = chakra_manager.get_type_name(chakra_type)
+		var type_name = ChakraManager.get_type_name(chakra_type)
 		print("[BATTLE_STATE_MANAGER] Animating new " + type_name + " chakra")
 		
 		# Animate overlay labels
@@ -271,27 +307,37 @@ func refresh_chakra_display():
 	# Only proceed if initialized
 	if !is_initialized:
 		return
-		
-	var chakra_manager = get_node("/root/ChakraManager")
-	if not chakra_manager:
-		print("[BATTLE_STATE_MANAGER] ChakraManager not found!")
-		return
 	
-	var chakra_data = chakra_manager.get_all_chakra("player")
+	var chakra_data = player1.get_all_chakra()
+	print("[BATTLE_STATE_MANAGER] Refreshing display with chakra data: " + str(chakra_data))
 	
 	# Update overlay labels
 	for type in chakra_data.keys():
-		if overlay_chakra_labels.has(type):
+		if overlay_chakra_labels.has(type) and overlay_chakra_labels[type]:
 			var count = chakra_data[type]
-			overlay_chakra_labels[type].text = "x " + str(count)
-			print("[BATTLE_STATE_MANAGER] Updated overlay " + chakra_manager.get_type_name(type) + " display to: x " + str(count))
+			overlay_chakra_labels[type].text = str(count)
+			
+			# Add visual feedback
+			if count > 0:
+				overlay_chakra_labels[type].add_theme_color_override("font_color", Color(0, 1, 0))
+			else:
+				overlay_chakra_labels[type].remove_theme_color_override("font_color")
+				
+			print("[BATTLE_STATE_MANAGER] Updated overlay " + ChakraManager.get_type_name(type) + " display to: " + str(count))
 	
 	# Update battle layout labels
 	for type in chakra_data.keys():
-		if battle_chakra_labels.has(type):
+		if battle_chakra_labels.has(type) and battle_chakra_labels[type]:
 			var count = chakra_data[type]
-			battle_chakra_labels[type].text = "x " + str(count)
-			print("[BATTLE_STATE_MANAGER] Updated battle " + chakra_manager.get_type_name(type) + " display to: x " + str(count))
+			battle_chakra_labels[type].text = str(count)
+			
+			# Add visual feedback
+			if count > 0:
+				battle_chakra_labels[type].add_theme_color_override("font_color", Color(0, 1, 0))
+			else:
+				battle_chakra_labels[type].remove_theme_color_override("font_color")
+				
+			print("[BATTLE_STATE_MANAGER] Updated battle " + ChakraManager.get_type_name(type) + " display to: " + str(count))
 
 # Start a battle
 func start_battle():
@@ -302,6 +348,8 @@ func start_battle():
 
 	print("[BATTLE_STATE_MANAGER] Starting battle")
 	current_player = PlayerId.PLAYER1
+	current_player_obj = player1
+	
 	emit_signal("turn_changed", current_player)
 	# Begin first turn
 	start_turn(current_player)
@@ -314,7 +362,11 @@ func start_turn(player_id):
 		
 	print("[BATTLE_STATE_MANAGER] Starting turn for Player" + str(player_id))
 	current_player = player_id
+	current_player_obj = player1 if player_id == PlayerId.PLAYER1 else player2
 	current_phase = Phase.DRAW
+	
+	# Activate the player object
+	current_player_obj.start_turn()
 	
 	# Notify about turn change
 	emit_signal("turn_changed", current_player)
@@ -325,6 +377,9 @@ func start_turn(player_id):
 # End the current turn
 func end_turn():
 	print("[BATTLE_STATE_MANAGER] Ending turn for " + str(current_player))
+	
+	# End current player's turn
+	current_player_obj.end_turn()
 	
 	# Toggle player
 	current_player = PlayerId.PLAYER2 if current_player == PlayerId.PLAYER1 else PlayerId.PLAYER1
@@ -370,12 +425,8 @@ func handle_draw_phase():
 func handle_chakra_phase():
 	print("[BATTLE_STATE_MANAGER] Drawing chakra for " + str(current_player))
 	
-	# Draw chakra using ChakraManager
-	var chakra_manager = get_node_or_null("/root/ChakraManager")
-	if chakra_manager:
-		chakra_manager.draw_chakra(current_player, 3)
-	else:
-		push_error("ChakraManager not found when trying to draw chakra!")
+	# Draw chakra using ChakraManager directly
+	ChakraManager.draw_chakra_for_player(current_player_obj, 3)
 	
 	# Auto-progress to Main phase
 	get_tree().create_timer(1.5).timeout.connect(func(): change_phase(Phase.MAIN))
@@ -418,21 +469,17 @@ func get_current_phase_name() -> String:
 # For debugging, this can be called to force drawing chakra
 func debug_draw_chakra(amount=3):
 	print("[BATTLE_STATE_MANAGER] Debug: Drawing " + str(amount) + " chakra")
-	var chakra_manager = get_node_or_null("/root/ChakraManager")
-	if chakra_manager:
-		chakra_manager.draw_chakra("player", amount)
-	else:
-		push_error("ChakraManager not found when trying to draw chakra!")
+	ChakraManager.draw_chakra_for_player(player1, amount)
 
 # Core battle methods migrated from GameStateManager
 func perform_switch(source_card, target_card) -> bool:
 	Logger.info("BATTLE_STATE", "Checking switch for: " + source_card.character_data.name + " -> " + target_card.character_data.name)
-	Logger.info("BATTLE_STATE", "Has switched before: " + str(has_switched_this_turn))
-
-	if current_player == PlayerId.PLAYER1 and !has_switched_this_turn:
-		has_switched_this_turn = true
+	
+	if current_player_obj.can_switch():
+		current_player_obj.perform_switch()
 		emit_signal("switch_performed", source_card, target_card)
 		return true
+		
 	Logger.info("BATTLE_STATE", "Rejecting switch for: " + source_card.character_data.name + " -> " + target_card.character_data.name)
 	return false
 
@@ -441,15 +488,31 @@ func begin_attack(character: CharacterCard):
 	current_character = character
 	current_ability = character.character_data.attack_data
 	Logger.info("BATTLE_STATE", "Current Ability: " + current_ability.get_summary())
-	var ov = get_tree().current_scene
-	ov.highlight_targets(current_ability)
+	
+	# Get the battle scene using the dedicated getter
+	var battle_scene = SceneManager.get_battle_scene()
+	if battle_scene == null:
+		Logger.info("BATTLE_STATE", "Battle scene is not available")
+		return
+	else:
+		Logger.info("BATTLE_STATE", "Battle scene value: " + str(battle_scene))
+		
+	battle_scene.highlight_targets(current_ability)
 
-func perform_attack(attacker_data: CharacterData, target_data: CharacterData) -> bool:
-	Logger.info("BATTLE_STATE", "Attack: " + attacker_data.name + " -> " + target_data.name)
-	var is_defeated = target_data.take_damage(attacker_data.attack_data.damage)
+func perform_attack(attacker_data: CharacterCard, target_data: CharacterCard) -> int:
+	Logger.info("BATTLE_STATE", "Attack: " + attacker_data.character_data.name + " -> " + target_data.character_data.name)
+	
+	var damage: int = 0
+	
+	if attacker_data.is_support_character():
+		damage = attacker_data.character_data.attack_data.support_damage
+	else:
+		damage = attacker_data.character_data.attack_data.damage
+		
+	var is_defeated = target_data.character_data.take_damage(damage)
 	
 	emit_signal("attack_performed", attacker_data, target_data, is_defeated)
-	return is_defeated
+	return damage
 
 func show_battle_overlay(character: CharacterCard) -> void:
 	Logger.info("BATTLE_STATE", "Show Battle Overlay for: " + character.get_character_name())
@@ -461,3 +524,13 @@ func hide_battle_overlay(after_attack: bool = false) -> void:
 	var ov = get_tree().current_scene.get_node_or_null("BattleOverlay")
 	if ov and ov.has_method("clear_overlay"):
 		ov.clear_overlay()
+
+# Helper methods to get player objects
+func get_player(player_id: int) -> Player:
+	if player_id == PlayerId.PLAYER1:
+		return player1
+	else:
+		return player2
+		
+func get_current_player() -> Player:
+	return current_player_obj

@@ -68,18 +68,6 @@ mouse_filter = 2
 [node name="CardSlot" parent="BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition/Control" instance=ExtResource("1_3hov6")]
 position = Vector2(0, 51)
 
-[node name="HPLabel" type="Label" parent="BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition"]
-custom_minimum_size = Vector2(30, 0)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-mouse_filter = 1
-mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.236922, 0.781677, 0.39145, 1)
-theme_override_font_sizes/font_size = 14
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="SupportPosition2" type="CenterContainer" parent="BattleLayout/OppBattleArea/ShinobiContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -180,6 +168,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.56115, 0.704473, 1, 1)
 theme_override_font_sizes/font_size = 24
+text = "bjhvj"
 
 [node name="BloodlineContainer" type="HBoxContainer" parent="BattleLayout/PlayerHandContainer/HandCards/ChakraContainer/VBoxContainer"]
 layout_mode = 2
@@ -266,13 +255,14 @@ script = ExtResource("4_ugm31")
 character_card_scene = ExtResource("2_pu738")
 
 [node name="OverlayColor" type="ColorRect" parent="BattleOverlay"]
+z_index = 6
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.174626, 0.174626, 0.174626, 0.347)
+color = Color(0.176471, 0.176471, 0.176471, 0.509804)
 
 [node name="OverlayLayout" type="VBoxContainer" parent="BattleOverlay"]
 layout_mode = 1

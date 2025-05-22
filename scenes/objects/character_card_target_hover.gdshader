@@ -16,5 +16,5 @@ float edge_fade = 0.2;
 // smoothly fades inwards
 float glow = 1.0 - smoothstep(0.0, edge_fade, closest);
 // Glow color and alpha; feel free to adjust
-COLOR = vec4(0.9, 0.4, 0.1, glow * 0.5);
+COLOR = vec4(1.0, 0.1, 0.05, glow * 0.5);
 }

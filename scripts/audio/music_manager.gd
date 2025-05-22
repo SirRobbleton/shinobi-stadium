@@ -246,7 +246,7 @@ func _play_next_track_in_sequence():
 	current_player = next_player
 	
 	# Connect to the finished signal to play next track
-	#next_player.finished.connect(_on_track_finished, CONNECT_ONE_SHOT)
+	next_player.finished.connect(_on_track_finished, CONNECT_ONE_SHOT)
 
 # Add this signal handler
 func _on_track_finished():

@@ -12,6 +12,9 @@ var current_scene_path: String = ""
 var current_scene_node: Node = null
 var initialized: bool = false
 
+# Dedicated battle scene reference
+var _battle_scene: BattleScene = null
+
 # Scene configuration - easily expandable
 var scene_config = {
 	"res://scenes/main.tscn": {
@@ -41,9 +44,23 @@ func _initialize():
 	await get_tree().process_frame
 	
 	current_scene_node = get_tree().current_scene
+	
 	Logger.info("SCENE", "CURRENT SCENE NODE 1: " + str(current_scene_node))
 	if current_scene_node:
-		current_scene_path = current_scene_node.scene_file_path
+		# Get the scene path, handling both direct path and packed scene
+		if current_scene_node.scene_file_path:
+			current_scene_path = current_scene_node.scene_file_path
+		elif current_scene_node.get_parent() and current_scene_node.get_parent().scene_file_path:
+			current_scene_path = current_scene_node.get_parent().scene_file_path
+		else:
+			# Try to determine scene type from content
+			if current_scene_node.has_node("BattleLayout"):
+				current_scene_path = "res://scenes/battle/battle_scene.tscn"
+			elif current_scene_node.has_node("SelectionLayout"):
+				current_scene_path = "res://scenes/selection/selection_scene.tscn"
+			else:
+				current_scene_path = "res://scenes/main.tscn"
+				
 		Logger.info("SCENE", "Initial scene is " + current_scene_path)
 		
 		# Only apply scene config if we haven't changed scenes already
@@ -93,7 +110,7 @@ func change_scene(new_scene_path: String):
 	if new_scene_path == "res://scenes/selection/selection_scene.tscn" and skip_selection:
 		Logger.info("SCENE", "Skipping selection scene, going straight to battle")
 		new_scene_path = "res://scenes/battle/battle_scene.tscn"
-		
+
 		# Generate random characters
 		CharacterSelection.generate_random_characters()
 	
@@ -109,11 +126,42 @@ func change_scene(new_scene_path: String):
 	# Wait for the scene to be ready
 	await get_tree().process_frame
 	
+	# Get the new scene
+	var new_scene = get_tree().current_scene
+	if new_scene == null:
+		Logger.error("SCENE", "Failed to get new scene after change")
+		return
+	
+	# If it's a battle scene, store it separately and wait for full initialization
+	if new_scene_path == "res://scenes/battle/battle_scene.tscn":
+		if not new_scene is BattleScene:
+			Logger.error("SCENE", "Loaded scene is not a BattleScene")
+			return
+			
+		# Wait for the scene to be fully ready
+		await new_scene.ready
+		
+		# Additional wait to ensure all children are ready
+		await get_tree().process_frame
+		
+		# Store the battle scene reference
+		_battle_scene = new_scene
+		
+		# Verify the battle scene is properly initialized
+		if _battle_scene == null:
+			Logger.error("SCENE", "Failed to store battle scene reference")
+			return
+			
+		Logger.info("SCENE", "Battle scene initialized successfully")
+	else:
+		_battle_scene = null
+	
 	# Update current scene tracking
 	current_scene_path = new_scene_path
-	current_scene_node = get_tree().current_scene
-	Logger.info("SCENE", "CURRENT SCENE NODE 3: " + str(current_scene_node))
-
+	current_scene_node = new_scene
+	
+	Logger.info("SCENE", "Scene loaded: " + str(current_scene_node) + " is BattleScene: " + str(is_in_battle_scene()))
+	
 	# Apply the appropriate music and other scene-specific settings
 	_apply_scene_config(new_scene_path)
 	
@@ -137,8 +185,27 @@ func _apply_scene_config(scene_path: String):
 
 # Add a centralized function to check if current scene is battle scene
 func is_in_battle_scene() -> bool:
+	Logger.info("SCENE", "Current Scene: " + current_scene_path, Logger.DetailLevel.HIGH)
 	return current_scene_path == "res://scenes/battle/battle_scene.tscn"
 
 # Add a centralized function to check if current scene is selection scene
 func is_in_selection_scene() -> bool:
 	return current_scene_path == "res://scenes/selection/selection_scene.tscn"
+
+# Add a getter for battle scene
+func get_battle_scene() -> BattleScene:
+	# First check if we have a valid battle scene reference
+	if _battle_scene != null and is_instance_valid(_battle_scene):
+		Logger.info("SCENE", "Returning cached battle scene reference")
+		return _battle_scene
+		
+	# If no valid reference, try to find the battle scene in the current scene
+	var current_scene = get_tree().current_scene
+	if current_scene and current_scene.has_node("BattleLayout"):
+		Logger.info("SCENE", "Found battle scene by content")
+		_battle_scene = current_scene
+		current_scene_path = "res://scenes/battle/battle_scene.tscn"
+		return _battle_scene
+		
+	Logger.info("SCENE", "No valid battle scene found")
+	return null

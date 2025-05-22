@@ -20,11 +20,12 @@ signal place_character_on_slot(character: CharacterCard, slot: CardSlot)
 @onready var hp_label = $RigidBody2D/CharacterVisuals/Portrait/HPColor/HPLabel
 @onready var hover_panel = $RigidBody2D/CharacterVisuals/Portrait/BacklightPanel
 @onready var target_panel = $RigidBody2D/CharacterVisuals/Portrait/TargetPanel
+@onready var target_hover_panel = $RigidBody2D/CharacterVisuals/Portrait/TargetHoverPanel
 @onready var rigid_body = $RigidBody2D
 @onready var collision_shape = $RigidBody2D/CollisionShape2D
 
 # State management
-enum CardState { IDLE, CLICKED, DRAGGING }
+enum CardState { IDLE, CLICKED, DRAGGING, TARGETED}
 enum CardInputState { DISABLED, TARGETABLE, SELECTABLE, PREVIEW }
 enum SceneType { SELECTION, BATTLE }
 
@@ -37,8 +38,8 @@ signal current_input_state_changed(old_state, new_state)
 var player_id = null
 
 func set_current_state(val: CardState) -> void:
-	if current_state == val:
-		return
+	#if current_state == val:
+	#	return
 	var old_state = current_state
 	current_state = val
 	match val:
@@ -51,6 +52,10 @@ func set_current_state(val: CardState) -> void:
 		CardState.DRAGGING:
 			# TODO: logic for DRAGGING state
 			pass
+		CardState.TARGETED:
+			target_hover_panel.visible = true
+			target_panel.visible = false
+			tween_pulsate_glow()
 	emit_signal("current_state_changed", old_state, val)
 	_on_current_state_changed(old_state, val)
 
@@ -130,6 +135,10 @@ static var DEFAULT_Z_INDEX: int = 5
 var normal_scale: Vector2 = Vector2(1.0, 1.0)
 var drag_scale: Vector2 = Vector2(1.1, 1.1)
 
+# Add these with other class variables at the top
+var float_tween: Tween = null
+var glow_tween: Tween = null
+
 func _ready():
 	# Initialize scene type
 	scene_type = SceneType.SELECTION if is_in_selection_scene() else SceneType.BATTLE
@@ -165,8 +174,8 @@ func _input(event):
 	if is_disabled or _is_blocked_by_battle_overlay():
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			if is_hovered:
+		if event.pressed and is_hovered:
+			if current_input_state != CardInputState.DISABLED:
 				_handle_mouse_press()
 		else:
 			_handle_mouse_release()
@@ -272,8 +281,7 @@ func _handle_mouse_press():
 		CardInputState.TARGETABLE:
 			Logger.info("CARD_STATE", "Click on targetable card: " + get_character_name(), Logger.DetailLevel.MEDIUM)
 			#emit_signal("card_clicked", self)
-			BattleStateManager.perform_attack(BattleStateManager.current_character.character_data, character_data)
-			tween_damage_popup(BattleStateManager.current_ability.damage)
+			tween_damage_popup(BattleStateManager.perform_attack(BattleStateManager.current_character, self))
 			tween_pop_hp_label()
 			tween_shake_card()
 			update_hp()
@@ -356,6 +364,7 @@ func _handle_single_click():
 			ZoomManager.show_card(character_data)
 		SceneType.BATTLE:
 			BattleStateManager.show_battle_overlay(self)
+			print("SHOE BATTLE OVERLAY")
 
 func _handle_long_press():
 	InputSettings.log_input_event("Long press handling initiated for " + get_character_name())
@@ -645,17 +654,27 @@ func enable_card():
 		_start_floating_animation()
 
 func _on_mouse_exited() -> void:
-	if current_input_state == CardInputState.DISABLED:
-		return
+	match current_input_state:
+		CardInputState.DISABLED:
+			return
+		CardInputState.TARGETABLE:
+			stop_pulsate_glow()
 	hover_panel.visible = false
-	is_hovered = false	
+	is_hovered = false
+	Logger.info("CARD_STATE", "Hover Exit: " + get_character_name(), Logger.DetailLevel.LOW)
+
 
 func _on_mouse_entered() -> void:
-	if current_input_state == CardInputState.DISABLED:
-		return
-	hover_panel.visible = true
+	match current_input_state:
+		CardInputState.DISABLED:
+			return
+		CardInputState.TARGETABLE:
+			set_current_state(CardState.TARGETED)
+		CardInputState.SELECTABLE:
+			hover_panel.visible = true
 	is_hovered = true
 	SfxManager.play_sfx("hover")
+	Logger.info("CARD_STATE", "Hover Enter: " + get_character_name(), Logger.DetailLevel.LOW)
 
 
 # Add these new functions after the existing ones
@@ -756,16 +775,25 @@ func _end_drag_operation():
 		set_current_state(CardState.IDLE)
 
 func is_support_character() -> bool:
+	Logger.info("CARD_STATE", "Check if support character: " + get_character_name(), Logger.DetailLevel.LOW)
 	if is_in_battle_scene():
 		var battle_scene = get_tree().current_scene
 		var battle_path = SceneManager.current_scene_path
 
 		Logger.info("CARD_STATE", "Battle scene: " + str(battle_scene), Logger.DetailLevel.LOW)
 		Logger.info("CARD_STATE", "Battle path: " + str(battle_path), Logger.DetailLevel.LOW)
+		Logger.info("CARD_STATE", "Current Slot Path: " + str(current_slot.get_path()), Logger.DetailLevel.LOW)
 
-		if current_slot == battle_scene.player_slot_active:
+		if current_slot in [
+			battle_scene.player_slot_active,
+			battle_scene.player2_slot_active
+			]:
 			return false
-		elif current_slot == battle_scene.player_slot_support1 or current_slot == battle_scene.player_slot_support2:
+		elif current_slot in [
+			battle_scene.player_slot_support1,
+			battle_scene.player_slot_support2,
+			battle_scene.player2_slot_support1,
+			battle_scene.player2_slot_support2]:
 				return true
 	return false
 
@@ -824,3 +852,66 @@ func tween_damage_popup(damage: int) -> void:
 	await tween.tween_property(dmg_label, "global_position", target_pos, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tween.tween_property(dmg_label, "modulate:a", 0.0, 1.0)
 	tween.connect("finished", Callable(dmg_label, "queue_free"))
+
+# Helper function to kill all tweens on this card
+func kill_all_tweens() -> void:
+	get_tree().create_tween().kill()
+
+# Add tween-based glow effect functions
+func tween_pulsate_glow() -> void:
+	if !target_panel:
+		return
+		
+	# Make sure target panel is visible
+	target_hover_panel.visible = true
+	
+	# Store original position if not already stored
+	if original_position == Vector2.ZERO and rigid_body:
+		original_position = rigid_body.position
+	
+	# Create and store the float tween
+	float_tween = create_tween()
+	float_tween.set_loops()  # Make it loop infinitely
+	
+	# Create floating motion - chain the tweeners
+	float_tween.tween_property(rigid_body, "position:y", 
+		original_position.y - float_height, 1.0).set_ease(Tween.EASE_IN_OUT)
+	float_tween.tween_property(rigid_body, "position:y", 
+		original_position.y, 1.0).set_ease(Tween.EASE_IN_OUT)
+	
+	# Create and store the glow tween
+	glow_tween = create_tween()
+	glow_tween.set_loops()  # Make it loop infinitely
+	
+	# Pulse the target panel's modulate - chain the tweeners
+	glow_tween.tween_property(target_panel, "modulate", 
+		Color(1.0, 0.7, 0.7, 0.9), 2.0).set_ease(Tween.EASE_IN_OUT)
+	glow_tween.tween_property(target_panel, "modulate", 
+		Color(1.0, 0.7, 0.7, 0.7), 2.0).set_ease(Tween.EASE_IN_OUT)
+	
+	# Ensure input processing is enabled
+	set_process_input(true)
+	if rigid_body:
+		rigid_body.input_pickable = true
+
+func stop_pulsate_glow() -> void:
+	# Kill specific tweens
+	if float_tween:
+		print("FOUDN FLOAT")
+		float_tween.kill()
+		float_tween = null
+	if glow_tween:
+		print("FOUDN GLOW")
+		glow_tween.kill()
+		glow_tween = null
+	
+	# Reset modulate color immediately
+	if portrait:
+		portrait.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	
+	target_hover_panel.visible = false
+	
+	# Reset position if we have a stored original position
+	rigid_body.position = original_position
+	
+	set_targetable(true)

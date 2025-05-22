@@ -1,22 +1,27 @@
 # battle_scene.gd
 extends Control
+class_name BattleScene
 
 # Character card scene reference for instantiating cards
 @export var character_card_scene: PackedScene
+
 
 # Slots for player and opponent shinobi
 @onready var player_slot_active = $BattleLayout/PlayerBattleArea/ShinobiContainer/ActivePosition/Control/CardSlot
 @onready var player_slot_support1 = $BattleLayout/PlayerBattleArea/ShinobiContainer/SupportPosition1/Control/CardSlot
 @onready var player_slot_support2= $BattleLayout/PlayerBattleArea/ShinobiContainer/SupportPosition2/Control/CardSlot
 
+@onready var player_slots = [player_slot_active, player_slot_support1, player_slot_support2]
+
+@onready var player2_slot_active = $BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition/Control/CardSlot
+@onready var player2_slot_support1 = $BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition1/Control/CardSlot
+@onready var player2_slot_support2= $BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition2/Control/CardSlot
+
 @onready var opponent_slots = [
 	$BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition1/Control/CardSlot,
 	$BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition/Control/CardSlot,
 	$BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition2/Control/CardSlot
 ]
-@onready var player2_slot_active = $BattleLayout/OppBattleArea/ShinobiContainer/ActivePosition/Control/CardSlot
-@onready var player2_slot_support1 = $BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition1/Control/CardSlot
-@onready var player2_slot_support2= $BattleLayout/OppBattleArea/ShinobiContainer/SupportPosition2/Control/CardSlot
 
 # Player hand containers
 @onready var player_hand_container = $BattleLayout/PlayerHandContainer/HandCards
@@ -72,27 +77,42 @@ func _ready():
 
 # Initialize the chakra system
 func _initialize_chakra_system():
-	# No need to create the ChakraDisplay script anymore as functionality is in BattleStateManager
-	Logger.info("BATTLE", "Chakra system will be handled by BattleStateManager")
+	# Create ChakraDisplay if it doesn't exist
+	var chakra_display = get_node_or_null("ChakraDisplay")
+	if !chakra_display:
+		chakra_display = Node.new()
+		chakra_display.set_script(load("res://scripts/ui/chakra_display.gd"))
+		add_child(chakra_display)
+		Logger.info("BATTLE_SCENE", "Created new ChakraDisplay node")
 	
-	# Force drawing initial chakra happens in BattleStateManager.start_game()
-	
-	# No need for additional timers to refresh the display as it's managed by BattleStateManager
+	# Initialize chakra for player
+	ChakraManager.draw_chakra("PLAYER1", 3)  # Draw 3 initial chakra
+	Logger.info("BATTLE_SCENE", "Initialized chakra for PLAYER1")
+
 
 # Initialize the battle phase UI
 func _initialize_battle_phase_ui():
-	# Create the battle phase UI script if not exists
-	if !has_node("BattlePhaseUI"):
-		var battle_phase_ui = Node.new()
-		battle_phase_ui.name = "BattlePhaseUI"
+	# Create BattlePhaseUI if it doesn't exist
+	var battle_phase_ui = get_node_or_null("BattlePhaseUI")
+	if !battle_phase_ui:
+		battle_phase_ui = Node.new()
 		battle_phase_ui.set_script(load("res://scripts/ui/battle_phase_ui.gd"))
 		add_child(battle_phase_ui)
-		Logger.info("BATTLE", "Initialized BattlePhaseUI")
-		
-	# Battle start is now only called in _ready() to avoid duplicate chakra draws
-	# var battle_state = get_node_or_null("/root/BattleStateManager")
-	# if battle_state:
-	#     battle_state.start_battle()
+		Logger.info("BATTLE_SCENE", "Created new BattlePhaseUI node")
+	
+	# Connect to BattleStateManager signals
+	var battle_state = get_node_or_null("/root/BattleStateManager")
+	if battle_state:
+		# Check if signals are already connected before connecting
+		if !battle_state.is_connected("phase_changed", Callable(battle_phase_ui, "_on_phase_changed")):
+			battle_state.connect("phase_changed", Callable(battle_phase_ui, "_on_phase_changed"))
+			Logger.info("BATTLE_SCENE", "Connected phase_changed signal")
+			
+		if !battle_state.is_connected("turn_changed", Callable(battle_phase_ui, "_on_turn_changed")):
+			battle_state.connect("turn_changed", Callable(battle_phase_ui, "_on_turn_changed"))
+			Logger.info("BATTLE_SCENE", "Connected turn_changed signal")
+	else:
+		Logger.warning("BATTLE_SCENE", "BattleStateManager not found!")
 
 # Handler for when an attack requires a target
 func _on_target_required(attacker_data: CharacterData):
@@ -112,32 +132,26 @@ func _on_attack_initiated(attacker_data: CharacterData):
 	# Additional attack initialization can be added here
 
 # Triggered when an attack is performed
-func _on_attack_performed(attacker_data: CharacterData, target_data: CharacterData, target_defeated: bool):
+func _on_attack_performed(attacker_data: CharacterCard, target_data: CharacterCard, target_defeated: bool):
 	Logger.info("BATTLE", "Attack performed: " + attacker_data.name + " -> " + target_data.name)
 	
 	# Add visual effects for the attack
 	# Here we could add animations, particles, etc.
-	
+	clear_highlights()
+
 	# Handle defeated character if necessary
 	if target_defeated:
-		Logger.info("BATTLE", "Character defeated: " + target_data.name)
+		Logger.info("BATTLE", "Character defeated: " + target_data.character_data.name)
 		
-		# Find the character card associated with this data
-		var target_character = null
-		var character_cards = get_tree().get_nodes_in_group("character")
-		for card in character_cards:
-			if card.character_data == target_data:
-				target_character = card
-				break
+		# Apply visual effect for defeated character
+		var defeat_tween = create_tween()
+		defeat_tween.tween_property(target_data, "modulate", Color(0.5, 0.5, 0.5, 0.7), 0.5)
 		
-		if target_character:
-			# Apply visual effect for defeated character
-			var defeat_tween = create_tween()
-			defeat_tween.tween_property(target_character, "modulate", Color(0.5, 0.5, 0.5, 0.7), 0.5)
-			
-			# Disable interaction with defeated character
-			if target_character.has_method("disable_card"):
-				target_character.disable_card()
+		# Disable interaction with defeated character
+		if target_data.has_method("disable_card"):
+			target_data.disable_card()
+				
+	#target_data.kill_all_tweens()
 
 # Find the opponent's active character
 func find_opponent_active_shinobi():
@@ -167,46 +181,74 @@ func highlight_targets(ability: AbilityData):
 	
 	# Get all opponent characters
 	var all_characters = get_tree().get_nodes_in_group("character")
-	var target_characters = []
+	var targetable_characters: Array[CharacterCard] = []
+	var targeted_characters: Array[CharacterCard] = []
+	var player_characters: Array[CharacterCard] = []
+	var opponent_characters: Array[CharacterCard] = []		
 	
+	for character: CharacterCard in all_characters:
+		if (character.current_input_state != CharacterCard.CardInputState.PREVIEW) and character.has_meta("character_data"):
+			var char_data = character.get_meta("character_data")
+			if char_data.current_hp <= 0:
+				Logger.info("BATTLE", "Skipping " + character.get_character_name() + " - same side as attacker (player_owned: " + str(character.player_owned) + ")")
+				continue
+						
+			# Skip if character is on the same side as the attacker
+			if character.player_id == BattleStateManager.current_player:
+				player_characters.append(character)
+			elif character.player_id != BattleStateManager.current_player:
+				opponent_characters.append(character)
+						
 	match ability.target:
 		"Active":
-			target_characters.append(player2_slot_active.held_card)
+			print("CHECK ACTIVE")
+			for opponent in opponent_characters:
+				if !opponent.is_support_character():
+					print("CHECK SUPPORT")
+					targetable_characters.append(opponent)
 		"All":
 			# Filter for opponent characters
-			for character in all_characters:
-				if !character.is_preview and character.has_meta("character_data"):
-					var char_data = character.get_meta("character_data")
-					if char_data.current_hp <= 0:
-						continue
-								
-					# Skip if character is on the same side as the attacker
-					if character.player_id == BattleStateManager.current_player:
-						Logger.info("BATTLE", "Skipping " + character.get_character_name() + " - same side as attacker (player_owned: " + str(character.player_owned) + ")")
-						continue
-						
-					# Skip if character is already defeated
-					
-						
-					target_characters.append(character)
+			for opponent in opponent_characters:
+				targeted_characters.append(opponent)
+		"Any":
+			# Filter for opponent characters
+			for opponent in opponent_characters:
+				targetable_characters.append(opponent)
+		"Benched":
+			# Filter for opponent characters
+			for opponent in opponent_characters:
+				if opponent.is_support_character():
+					targetable_characters.append(opponent)
+		
 			
 	# Check if we found any valid targets
-	if target_characters.size() == 0:
-		Logger.info("BATTLE", "No valid targets found!")
+	if targetable_characters.size() == 0:
+		Logger.info("BATTLE", "No valid target characters found!")
 		# Just leave the overlay open, showing only the attacker's card
-		return
+		pass
+	elif targeted_characters.size() == 0:
+		Logger.info("BATTLE", "No valid targeted characters found!")
+		# Just leave the overlay open, showing only the attacker's card
+		pass
 		
 	# Ask battle scene to highlight all valid targets
-	var battle_scene = get_tree().current_scene
-	for target in target_characters:
-		battle_scene.highlight_character(target)
+	for target in targetable_characters:
+		highlight_character(target)
 		
 		# Make sure it's input_pickable for targeting
 		if target.has_node("RigidBody2D"):
 			target.get_node("RigidBody2D").input_pickable = true
 		
-		Logger.info("BATTLE", "Highlighted target: " + target.character_data.name)
-	
+		Logger.info("BATTLE", "Highlighted targeatable: " + target.character_data.name)
+		
+		
+	for target in targeted_characters:
+		target.set_current_state(CharacterCard.CardState.TARGETED)		
+		# Make sure it's input_pickable for targeting
+		if target.has_node("RigidBody2D"):
+			target.get_node("RigidBody2D").input_pickable = true
+		
+		Logger.info("BATTLE", "Highlighted targeted: " + target.character_data.name)
 
 # Highlight a character as targetable (for attack)
 func highlight_character(character):
@@ -241,16 +283,16 @@ func clear_highlights():
 	var character_cards = get_tree().get_nodes_in_group("character")
 	var highlight_count = 0
 	
-	for card in character_cards:
+	for card: CharacterCard in character_cards:
 		# Remove target flag
-		if card.has_meta("is_target"):
-			card.remove_meta("is_target")
+		if card.current_input_state == card.CardInputState.TARGETABLE:
 			highlight_count += 1
 			
-		# Set targetable to false if method exists
-		if card.has_method("set_targetable"):
-			card.set_targetable(false)
-		
+			# Set targetable to false if method exists
+			if card.has_method("set_targetable"):
+				card.stop_pulsate_glow()
+				card.set_targetable(false)
+
 		# Disconnect target_clicked signal
 		if card.has_signal("target_clicked") and card.is_connected("target_clicked", Callable(self, "_on_target_clicked")):
 			card.disconnect("target_clicked", Callable(self, "_on_target_clicked"))
@@ -423,7 +465,7 @@ func place_character_on_slot(card: CharacterCard, slot: CardSlot):
 	if card.player_owned:
 		card.set_process_input(true)
 		card.current_state = card.CardState.IDLE
-		card.current_slot != null
+		#card.current_slot != null
 		# Store slot reference using set_meta instead of using current_slot directly
 		card.set_meta("slot_reference", slot)
 		Logger.info("BATTLE_SCENE", "Enabled dragging for player card: " + card.character_data.name)
@@ -818,7 +860,7 @@ func _on_battle_overlay_visibility_changed():
 	
 	var character_cards = get_tree().get_nodes_in_group("character")
 	
-	for card in character_cards:
+	for card: CharacterCard in character_cards:
 		# Don't disable the active card if the overlay is visible
 		var is_active_card = false
 		if is_visible and battle_overlay.displayed_card == card:
@@ -828,8 +870,11 @@ func _on_battle_overlay_visibility_changed():
 		if is_visible and !is_active_card:
 			if card.has_method("disable_card"):
 				card.disable_card()
+				print("Doung 1")
 		elif !is_visible:
-			if card.has_method("enable_card"):
-				card.enable_card()
+			if card.character_data.current_hp > 0:
+				print("Doung 2")
+				if card.has_method("enable_card"):
+					card.enable_card()
 				
 	Logger.info("BATTLE_SCENE", "Updated card states for overlay visibility change")
